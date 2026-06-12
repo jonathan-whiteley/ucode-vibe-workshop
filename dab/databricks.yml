@@ -37,6 +37,9 @@ variables:
   attendee_group:
     description: "Workspace group of workshop attendees (gets SELECT on tables and INSERT on Lakebase tables)"
     default: "users"
+  lakebase_instance:
+    description: "Name of the Lakebase Postgres instance the App connects to"
+    default: "command-center-lakebase"
 
 targets:
   dev:
@@ -55,4 +58,3 @@ targets:
     variables:
       catalog: "ioc_sandbox"
       schema: "vibe_workshop"
-      # Override warehouse_id and attendee_group at deploy time with --var

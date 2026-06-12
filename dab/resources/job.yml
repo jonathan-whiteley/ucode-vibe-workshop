@@ -3,12 +3,12 @@
 # target environment before the workshop.
 #
 #   databricks bundle deploy -t lce
-#   databricks bundle run workshop_setup -t lce
+#   databricks bundle run command_center_setup -t lce
 
 resources:
   jobs:
-    workshop_setup:
-      name: "[${bundle.target}] OCC workshop setup"
+    command_center_setup:
+      name: "[${bundle.target}] Operator Command Center setup"
       description: |
         One-shot setup for the ucode Vibe Coding workshop.
         Tasks run sequentially:
@@ -27,7 +27,7 @@ resources:
         - name: data_end_date
           default: ${var.data_end_date}
         - name: lakebase_instance_name
-          default: vibe-workshop-lakebase
+          default: command-center-lakebase
         - name: warehouse_id
           default: ${var.warehouse_id}
         - name: attendee_group

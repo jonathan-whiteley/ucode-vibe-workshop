@@ -1,0 +1,352 @@
+{
+  "datasets": [
+    {
+      "name": "kpis_today",
+      "displayName": "KPIs (latest day)",
+      "queryLines": [
+        "WITH latest AS (SELECT MAX(date) AS d FROM identifier(:catalog || '.' || :schema || '.facts_sales_daypart'))",
+        "SELECT",
+        "  (SELECT SUM(revenue) FROM identifier(:catalog || '.' || :schema || '.facts_sales_daypart') WHERE date = (SELECT d FROM latest)) AS sales_today,",
+        "  ROUND(",
+        "    (SELECT SUM(labor_cost) FROM identifier(:catalog || '.' || :schema || '.facts_labor_daypart') WHERE date = (SELECT d FROM latest))",
+        "    / NULLIF((SELECT SUM(revenue) FROM identifier(:catalog || '.' || :schema || '.facts_sales_daypart') WHERE date = (SELECT d FROM latest)), 0) * 100,",
+        "    1) AS labor_pct,",
+        "  (SELECT COUNT(*) FROM identifier(:catalog || '.' || :schema || '.facts_sales_inventory_daily') WHERE date = (SELECT d FROM latest) AND on_hand_eod < reorder_point) AS stockout_skus,",
+        "  (SELECT ROUND(AVG(rating), 2) FROM identifier(:catalog || '.' || :schema || '.facts_customer_feedback') WHERE date >= (SELECT d FROM latest) - 7) AS avg_rating"
+      ],
+      "parameters": [
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
+      ]
+    },
+    {
+      "name": "labor_pct_trend",
+      "displayName": "Labor % of sales, last 30 days",
+      "queryLines": [
+        "WITH end_dt AS (SELECT MAX(date) AS d FROM identifier(:catalog || '.' || :schema || '.facts_sales_daypart')),",
+        "sd AS (SELECT date, SUM(revenue) AS revenue FROM identifier(:catalog || '.' || :schema || '.facts_sales_daypart'), end_dt WHERE date >= end_dt.d - 30 GROUP BY date),",
+        "ld AS (SELECT date, SUM(labor_cost) AS labor_cost FROM identifier(:catalog || '.' || :schema || '.facts_labor_daypart'), end_dt WHERE date >= end_dt.d - 30 GROUP BY date)",
+        "SELECT sd.date AS labor_date, ROUND(ld.labor_cost / NULLIF(sd.revenue, 0) * 100, 2) AS labor_pct",
+        "FROM sd JOIN ld USING (date)",
+        "ORDER BY sd.date"
+      ],
+      "parameters": [
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
+      ]
+    },
+    {
+      "name": "sales_by_daypart_today",
+      "displayName": "Sales by daypart, today vs forecast",
+      "queryLines": [
+        "WITH latest AS (SELECT MAX(date) AS d FROM identifier(:catalog || '.' || :schema || '.facts_sales_daypart'))",
+        "SELECT daypart,",
+        "       'actual' AS series,",
+        "       SUM(revenue) AS amount",
+        "FROM identifier(:catalog || '.' || :schema || '.facts_sales_daypart'), latest",
+        "WHERE date = latest.d",
+        "GROUP BY daypart",
+        "UNION ALL",
+        "SELECT daypart, 'forecast', SUM(forecast_revenue)",
+        "FROM identifier(:catalog || '.' || :schema || '.facts_sales_daypart'), latest",
+        "WHERE date = latest.d",
+        "GROUP BY daypart",
+        "ORDER BY CASE daypart WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2 WHEN 'dinner' THEN 3 WHEN 'late' THEN 4 END, series"
+      ],
+      "parameters": [
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
+      ]
+    },
+    {
+      "name": "stock_health_by_category",
+      "displayName": "Stock health by category",
+      "queryLines": [
+        "WITH latest AS (SELECT MAX(date) AS d FROM identifier(:catalog || '.' || :schema || '.facts_sales_inventory_daily'))",
+        "SELECT i.category,",
+        "       'at par' AS status,",
+        "       SUM(CASE WHEN l.on_hand_eod >= l.reorder_point THEN 1 ELSE 0 END) AS sku_count",
+        "FROM identifier(:catalog || '.' || :schema || '.facts_sales_inventory_daily') l, latest,",
+        "     identifier(:catalog || '.' || :schema || '.dims_items') i",
+        "WHERE l.date = latest.d AND l.sku = i.sku",
+        "GROUP BY i.category",
+        "UNION ALL",
+        "SELECT i.category, 'below par', SUM(CASE WHEN l.on_hand_eod < l.reorder_point THEN 1 ELSE 0 END)",
+        "FROM identifier(:catalog || '.' || :schema || '.facts_sales_inventory_daily') l, latest,",
+        "     identifier(:catalog || '.' || :schema || '.dims_items') i",
+        "WHERE l.date = latest.d AND l.sku = i.sku",
+        "GROUP BY i.category",
+        "ORDER BY category, status"
+      ],
+      "parameters": [
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
+      ]
+    },
+    {
+      "name": "sentiment_30d",
+      "displayName": "Sentiment timeline, last 30 days",
+      "queryLines": [
+        "WITH latest AS (SELECT MAX(date) AS d FROM identifier(:catalog || '.' || :schema || '.facts_customer_feedback'))",
+        "SELECT date AS feedback_date, 'positive' AS sentiment, SUM(CASE WHEN sentiment_label='pos' THEN 1 ELSE 0 END) AS cnt",
+        "FROM identifier(:catalog || '.' || :schema || '.facts_customer_feedback'), latest",
+        "WHERE date >= latest.d - 30",
+        "GROUP BY date",
+        "UNION ALL",
+        "SELECT date, 'neutral', SUM(CASE WHEN sentiment_label='neu' THEN 1 ELSE 0 END)",
+        "FROM identifier(:catalog || '.' || :schema || '.facts_customer_feedback'), latest",
+        "WHERE date >= latest.d - 30",
+        "GROUP BY date",
+        "UNION ALL",
+        "SELECT date, 'negative', SUM(CASE WHEN sentiment_label='neg' THEN 1 ELSE 0 END)",
+        "FROM identifier(:catalog || '.' || :schema || '.facts_customer_feedback'), latest",
+        "WHERE date >= latest.d - 30",
+        "GROUP BY date",
+        "ORDER BY feedback_date, sentiment"
+      ],
+      "parameters": [
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "main",
+      "displayName": "Overview",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "title",
+            "multilineTextboxSpec": {"lines": ["## Operator Command Center"]}
+          },
+          "position": {"x": 0, "y": 0, "width": 12, "height": 1}
+        },
+        {
+          "widget": {
+            "name": "subtitle",
+            "multilineTextboxSpec": {"lines": ["Daily ops view across Labor, Inventory, and Guest Feedback. Reference dashboard for the ucode Vibe Coding workshop."]}
+          },
+          "position": {"x": 0, "y": 1, "width": 12, "height": 1}
+        },
+        {
+          "widget": {
+            "name": "kpi_sales",
+            "queries": [{
+              "name": "main_query",
+              "query": {
+                "datasetName": "kpis_today",
+                "fields": [{"name": "sales_today", "expression": "`sales_today`"}],
+                "disaggregated": true
+              }
+            }],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sales_today",
+                  "displayName": "Sales today",
+                  "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact", "decimalPlaces": {"type": "max", "places": 1}}
+                }
+              },
+              "frame": {"showTitle": true, "title": "Sales today"}
+            }
+          },
+          "position": {"x": 0, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_labor_pct",
+            "queries": [{
+              "name": "main_query",
+              "query": {
+                "datasetName": "kpis_today",
+                "fields": [{"name": "labor_pct", "expression": "`labor_pct`"}],
+                "disaggregated": true
+              }
+            }],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "labor_pct",
+                  "displayName": "Labor % of sales",
+                  "format": {"type": "number", "decimalPlaces": {"type": "fixed", "places": 1}}
+                }
+              },
+              "frame": {"showTitle": true, "title": "Labor % of sales"}
+            }
+          },
+          "position": {"x": 3, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_stockouts",
+            "queries": [{
+              "name": "main_query",
+              "query": {
+                "datasetName": "kpis_today",
+                "fields": [{"name": "stockout_skus", "expression": "`stockout_skus`"}],
+                "disaggregated": true
+              }
+            }],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "stockout_skus",
+                  "displayName": "SKUs below par",
+                  "format": {"type": "number"}
+                }
+              },
+              "frame": {"showTitle": true, "title": "SKUs below par"}
+            }
+          },
+          "position": {"x": 6, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "kpi_rating",
+            "queries": [{
+              "name": "main_query",
+              "query": {
+                "datasetName": "kpis_today",
+                "fields": [{"name": "avg_rating", "expression": "`avg_rating`"}],
+                "disaggregated": true
+              }
+            }],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_rating",
+                  "displayName": "Avg guest rating (7d)",
+                  "format": {"type": "number", "decimalPlaces": {"type": "fixed", "places": 2}}
+                }
+              },
+              "frame": {"showTitle": true, "title": "Avg guest rating (7d)"}
+            }
+          },
+          "position": {"x": 9, "y": 2, "width": 3, "height": 3}
+        },
+        {
+          "widget": {
+            "name": "chart_labor_trend",
+            "queries": [{
+              "name": "main_query",
+              "query": {
+                "datasetName": "labor_pct_trend",
+                "fields": [
+                  {"name": "labor_date", "expression": "`labor_date`"},
+                  {"name": "labor_pct", "expression": "`labor_pct`"}
+                ],
+                "disaggregated": true
+              }
+            }],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {"fieldName": "labor_date", "scale": {"type": "temporal"}, "displayName": "Date"},
+                "y": {"fieldName": "labor_pct", "scale": {"type": "quantitative"}, "displayName": "Labor %", "format": {"type": "number", "decimalPlaces": {"type": "fixed", "places": 1}}}
+              },
+              "frame": {"showTitle": true, "title": "Labor % of sales — last 30 days"}
+            }
+          },
+          "position": {"x": 0, "y": 5, "width": 6, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "chart_sales_daypart",
+            "queries": [{
+              "name": "main_query",
+              "query": {
+                "datasetName": "sales_by_daypart_today",
+                "fields": [
+                  {"name": "daypart", "expression": "`daypart`"},
+                  {"name": "amount", "expression": "`amount`"},
+                  {"name": "series", "expression": "`series`"}
+                ],
+                "disaggregated": true
+              }
+            }],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "mark": {"layout": "group"},
+              "encodings": {
+                "x": {"fieldName": "daypart", "scale": {"type": "categorical"}, "displayName": "Daypart"},
+                "y": {"fieldName": "amount", "scale": {"type": "quantitative"}, "displayName": "Revenue", "format": {"type": "number-currency", "currencyCode": "USD", "abbreviation": "compact"}},
+                "color": {"fieldName": "series", "scale": {"type": "categorical"}, "displayName": "Series"}
+              },
+              "frame": {"showTitle": true, "title": "Sales by daypart — today vs forecast"}
+            }
+          },
+          "position": {"x": 6, "y": 5, "width": 6, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "chart_stock_health",
+            "queries": [{
+              "name": "main_query",
+              "query": {
+                "datasetName": "stock_health_by_category",
+                "fields": [
+                  {"name": "category", "expression": "`category`"},
+                  {"name": "sku_count", "expression": "`sku_count`"},
+                  {"name": "status", "expression": "`status`"}
+                ],
+                "disaggregated": true
+              }
+            }],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {"fieldName": "category", "scale": {"type": "categorical"}, "displayName": "Category"},
+                "y": {"fieldName": "sku_count", "scale": {"type": "quantitative"}, "displayName": "SKU count"},
+                "color": {"fieldName": "status", "scale": {"type": "categorical"}, "displayName": "Status"}
+              },
+              "frame": {"showTitle": true, "title": "Stock health by category"}
+            }
+          },
+          "position": {"x": 0, "y": 10, "width": 6, "height": 5}
+        },
+        {
+          "widget": {
+            "name": "chart_sentiment",
+            "queries": [{
+              "name": "main_query",
+              "query": {
+                "datasetName": "sentiment_30d",
+                "fields": [
+                  {"name": "feedback_date", "expression": "`feedback_date`"},
+                  {"name": "cnt", "expression": "`cnt`"},
+                  {"name": "sentiment", "expression": "`sentiment`"}
+                ],
+                "disaggregated": true
+              }
+            }],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {"fieldName": "feedback_date", "scale": {"type": "temporal"}, "displayName": "Date"},
+                "y": {"fieldName": "cnt", "scale": {"type": "quantitative"}, "displayName": "Reviews"},
+                "color": {"fieldName": "sentiment", "scale": {"type": "categorical"}, "displayName": "Sentiment"}
+              },
+              "frame": {"showTitle": true, "title": "Sentiment timeline — last 30 days"}
+            }
+          },
+          "position": {"x": 6, "y": 10, "width": 6, "height": 5}
+        }
+      ]
+    }
+  ]
+}

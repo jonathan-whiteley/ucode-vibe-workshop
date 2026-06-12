@@ -58,8 +58,8 @@ Specific deployment values (target workspace, catalog, branding) live in the gui
 cd dab
 databricks bundle validate -t lce
 databricks bundle deploy -t lce
-databricks bundle run workshop_setup -t lce
-databricks bundle run occ_reference_app -t lce
+databricks bundle run command_center_setup -t lce
+databricks bundle run command_center_app -t lce
 ```
 
 See `dab/README.md` for the full flow including the Lakebase admin caveat.

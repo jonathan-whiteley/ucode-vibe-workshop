@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Init Lakebase: workshop write-back tables
 # MAGIC
-# MAGIC Creates 3 Postgres tables in the shared `vibe-workshop-lakebase`
+# MAGIC Creates 3 Postgres tables in the shared `command-center-lakebase`
 # MAGIC instance. All attendee Apps' SPs get INSERT/SELECT on these so the
 # MAGIC Release / Reply / Approve actions in the UI persist somewhere.
 # MAGIC
@@ -12,7 +12,7 @@
 # MAGIC - `schedules_approved` — Labor planner Approve Schedule button
 
 # COMMAND ----------
-dbutils.widgets.text("lakebase_instance_name", "vibe-workshop-lakebase")
+dbutils.widgets.text("lakebase_instance_name", "command-center-lakebase")
 dbutils.widgets.text("attendee_group", "users")
 LAKEBASE_NAME = dbutils.widgets.get("lakebase_instance_name")
 ATTENDEE_GROUP = dbutils.widgets.get("attendee_group")

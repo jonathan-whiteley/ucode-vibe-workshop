@@ -13,8 +13,8 @@
 
 resources:
   database_instances:
-    vibe_workshop_lakebase:
-      name: vibe-workshop-lakebase
+    command_center_lakebase:
+      name: command-center-lakebase
       capacity: CU_1
       # The DDL for the write-back tables is applied by the init_lakebase
       # notebook in the setup job. We don't model individual Postgres tables

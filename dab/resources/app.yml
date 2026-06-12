@@ -4,19 +4,16 @@
 #
 # After `bundle deploy`, you must `bundle run` to actually start the app:
 #   databricks bundle deploy -t lce
-#   databricks bundle run occ_reference_app -t lce
+#   databricks bundle run command_center_app -t lce
 #
 # Resources (SQL warehouse, UC tables, Lakebase) are granted to the App's
 # service principal via the resources block here. If you change them after
 # the first deploy, you must redeploy AND restart the app.
-#
-# Note: uc_securable accepts TABLE / VOLUME / FUNCTION / CONNECTION (no SCHEMA),
-# so the 8 workshop tables are listed individually.
 
 resources:
   apps:
-    occ_reference_app:
-      name: "occ-reference-${bundle.target}"
+    command_center_app:
+      name: "command-center-${bundle.target}"
       description: "Operator Command Center reference build (facilitator copy)"
       source_code_path: ../src/app
 
@@ -67,7 +64,7 @@ resources:
             permission: "SELECT"
         - name: lakebase
           database:
-            instance_name: vibe-workshop-lakebase
+            instance_name: command-center-lakebase
             database_name: databricks_postgres
             permission: "CAN_CONNECT_AND_CREATE"
 

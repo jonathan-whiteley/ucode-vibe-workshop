@@ -82,7 +82,7 @@ The `app/reference-prototype/Homebase.html` design is the Operator Command Cente
 
 | Risk | Mitigation |
 |---|---|
-| Per-attendee Lakebase provisioning | **Pre-provision 1 shared Lakebase** `vibe-workshop-lakebase` with 4 tables (`timecards_approved`, `purchase_orders_released`, `review_replies`, `schedules_approved`). Attendees' Apps' SPs get `INSERT, SELECT` on these. |
+| Per-attendee Lakebase provisioning | **Pre-provision 1 shared Lakebase** `command-center-lakebase` with 4 tables (`timecards_approved`, `purchase_orders_released`, `review_replies`, `schedules_approved`). Attendees' Apps' SPs get `INSERT, SELECT` on these. |
 | Per-attendee FMAPI endpoint setup | Use a managed Databricks foundation model (`databricks-meta-llama-3-3-70b-instruct` or similar); confirm attendee group has query access |
 | Per-attendee data generation | Already pre-generated in `ioc_sandbox.vibe_workshop`; attendees only read |
 
@@ -90,7 +90,7 @@ The `app/reference-prototype/Homebase.html` design is the Operator Command Cente
 
 ## What to pre-provision (facilitator, T-1 week)
 
-1. **Shared Lakebase instance** `vibe-workshop-lakebase`:
+1. **Shared Lakebase instance** `command-center-lakebase`:
    ```sql
    CREATE TABLE purchase_orders_released (
      event_id UUID PRIMARY KEY,
@@ -124,6 +124,6 @@ The `app/reference-prototype/Homebase.html` design is the Operator Command Cente
 - [x] Data materialized in `jdub_demo.vibe_workshop`
 - [x] LCE branding assets in `branding/lce/` (opt-in only, not wired into prototype)
 - [ ] Real AppKit build wired to workshop data (this is what attendees produce in Modules 2-5)
-- [ ] Shared `vibe-workshop-lakebase` provisioned
+- [ ] Shared `command-center-lakebase` provisioned
 
 The prototype is the design source of truth. The real AppKit build is what gets constructed during the workshop via ucode + ai-dev-kit.

@@ -8,10 +8,10 @@ This is the **facilitator's** one-shot bundle. Deploy it in the target workspace
 
 | Resource | Purpose |
 |---|---|
-| **Setup job** `workshop_setup` | 3 sequential tasks: generate data, init Lakebase, create reference Genie space |
-| **Lakebase instance** `vibe-workshop-lakebase` | Shared write-back Postgres for purchase orders, review replies, schedule approvals |
-| **Reference dashboard** `occ_reference_dashboard` | 4 datasets (labor %, sales by daypart, stock health, sentiment timeline) ready to drag onto the canvas |
-| **Reference App** `occ_reference_app` | Operator Command Center prototype served via FastAPI |
+| **Setup job** `command_center_setup` | 3 sequential tasks: generate data, init Lakebase, create reference Genie space |
+| **Lakebase instance** `command-center-lakebase` | Shared write-back Postgres for purchase orders, review replies, schedule approvals |
+| **Reference dashboard** `command_center_dash` | 4 datasets (labor %, sales by daypart, stock health, sentiment timeline) ready to drag onto the canvas |
+| **Reference App** `command_center_app` | Operator Command Center prototype served via FastAPI |
 
 ## Prereqs
 
@@ -26,8 +26,8 @@ This is the **facilitator's** one-shot bundle. Deploy it in the target workspace
 cd dab
 databricks bundle validate                            # dev target by default
 databricks bundle deploy                              # deploy to dev
-databricks bundle run workshop_setup                  # run the setup job
-databricks bundle run occ_reference_app               # start the App (apps need an explicit run after deploy)
+databricks bundle run command_center_setup                  # run the setup job
+databricks bundle run command_center_app               # start the App (apps need an explicit run after deploy)
 ```
 
 For LCE production:
@@ -35,8 +35,8 @@ For LCE production:
 ```bash
 databricks bundle validate -t lce
 databricks bundle deploy -t lce --var attendee_group=lce-workshop-attendees
-databricks bundle run workshop_setup -t lce
-databricks bundle run occ_reference_app -t lce
+databricks bundle run command_center_setup -t lce
+databricks bundle run command_center_app -t lce
 ```
 
 ## Variables
@@ -68,7 +68,7 @@ dab/
     │   ├── 02_init_lakebase.py     # DDL for write-back Postgres tables
     │   └── 03_create_genie_space.py  # REST API call to create reference Genie space
     ├── dashboards/
-    │   └── operator_insights.lvdash.json
+    │   └── operator_command_center.lvdash.json
     └── app/
         ├── app.py              # FastAPI static-file server
         ├── app.yaml            # Apps runtime config
@@ -80,7 +80,7 @@ dab/
 
 If `bundle deploy` fails on the `database_instances` resource with a permission error, you're not a workspace admin. Two workarounds:
 
-1. Have an admin create `vibe-workshop-lakebase` in the workspace UI (Compute → Database instances → Create). Then redeploy the bundle — it'll see the existing instance and skip creation.
+1. Have an admin create `command-center-lakebase` in the workspace UI (Compute → Database instances → Create). Then redeploy the bundle — it'll see the existing instance and skip creation.
 2. Or, comment out `resources/lakebase.yml`, deploy the rest, and provision the Lakebase manually. The `02_init_lakebase` notebook still creates the tables once the instance exists.
 
 ## Refreshing the static App copy
@@ -98,7 +98,7 @@ cp -R ../app/reference-prototype/assets src/app/static/
 cp -R ../app/reference-prototype/fonts src/app/static/
 
 databricks bundle deploy -t lce
-databricks bundle run occ_reference_app -t lce
+databricks bundle run command_center_app -t lce
 ```
 
 ## Tearing it down
