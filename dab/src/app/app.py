@@ -17,7 +17,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from routers import wiring
+from routers import feedback, inventory, labor, today, wiring
 
 STATIC_DIR = Path(__file__).parent / "static"
 DEFAULT_DOC = os.environ.get("DEFAULT_DOC", "Homebase.html")
@@ -25,6 +25,10 @@ DEFAULT_DOC = os.environ.get("DEFAULT_DOC", "Homebase.html")
 app = FastAPI(title="Command Center (reference)")
 
 app.include_router(wiring.router)
+app.include_router(today.router)
+app.include_router(labor.router)
+app.include_router(inventory.router)
+app.include_router(feedback.router)
 
 
 @app.get("/healthz")

@@ -7,6 +7,18 @@ const ACTION_LABELS = {
 };
 const CHIP_ORDER = ['inventory','labor','feedback'];
 
+const moneyShort = (n) => {
+  if (n == null) return '—';
+  if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1000) return '$' + (n / 1000).toFixed(1) + 'k';
+  return '$' + Math.round(n);
+};
+const countShort = (n) => {
+  if (n == null) return '—';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return String(Math.round(n));
+};
+
 const HomeView = () => {
   const { go, openGenie, askGenie, outstanding, store, t } = useApp();
   const brief = t.aiBrief || 'spotlight';
@@ -31,7 +43,25 @@ const HomeView = () => {
       sig: outstanding.feedback ? `${outstanding.feedback} reviews need a reply` : 'All reviews answered',
       cta: outstanding.feedback ? `Reply to ${outstanding.feedback} review${outstanding.feedback>1?'s':''}` : 'View all reviews' },
   ];
-  const kpiList = [
+
+  // Live KPIs from /api/today/kpis when the App is wired; falls back to mock data
+  // in data.jsx for the standalone prototype.
+  const [live, setLive] = useState(null);
+  useEffect(() => {
+    fetch('/api/today/kpis', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(setLive)
+      .catch(() => setLive(null));
+  }, []);
+
+  const fmtDelta = (pct) => pct == null ? null : `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`;
+  const kpiList = live ? [
+    { label:'Sales yesterday', v: moneyShort(live.sales_yesterday.value), d: fmtDelta(live.sales_yesterday.delta_pct), up: (live.sales_yesterday.delta_pct || 0) >= 0, spark: live.sales_yesterday.spark, c:'var(--db-lava-600)' },
+    { label:'Forecast today', v: moneyShort(live.forecast_today.value), sub: live.forecast_today.sub, spark: live.sales_yesterday.spark, c:'var(--db-blue-600)' },
+    { label:'Labor % of sales', v: (live.labor_pct.value || 0).toFixed(1) + '%', spark: live.sales_yesterday.spark, c:'var(--db-green-600)' },
+    { label:'Guest score', v: (live.guest_score.value || 0).toFixed(1) + '★', sub: live.guest_score.sub, spark: live.sales_yesterday.spark, c:'var(--db-yellow-600)' },
+    { label:'Guests', v: countShort(live.guests.value), d: fmtDelta(live.guests.delta_pct), up: (live.guests.delta_pct || 0) >= 0, spark: live.sales_yesterday.spark, c:'var(--db-navy-600)' },
+  ] : [
     { ...KPIS.sales, c:'var(--db-lava-600)' },
     { ...KPIS.forecast, c:'var(--db-blue-600)' },
     { ...KPIS.labor, c:'var(--db-green-600)' },
