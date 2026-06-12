@@ -33,8 +33,15 @@ resources:
         - name: attendee_group
           default: ${var.attendee_group}
 
+      # Serverless notebook compute (no cluster required).
+      environments:
+        - environment_key: default
+          spec:
+            client: "2"
+
       tasks:
         - task_key: generate_data
+          environment_key: default
           notebook_task:
             notebook_path: ../src/notebooks/01_generate_data.py
             base_parameters:
@@ -46,9 +53,10 @@ resources:
               items: "50"
               feedback: "1000"
               seed: "42"
-            warehouse_id: ${var.warehouse_id}
+              attendee_group: "{{job.parameters.attendee_group}}"
 
         - task_key: init_lakebase
+          environment_key: default
           depends_on:
             - task_key: generate_data
           notebook_task:
@@ -56,9 +64,9 @@ resources:
             base_parameters:
               lakebase_instance_name: "{{job.parameters.lakebase_instance_name}}"
               attendee_group: "{{job.parameters.attendee_group}}"
-            warehouse_id: ${var.warehouse_id}
 
         - task_key: create_genie_space
+          environment_key: default
           depends_on:
             - task_key: generate_data
           notebook_task:
@@ -67,7 +75,6 @@ resources:
               catalog: "{{job.parameters.catalog}}"
               schema: "{{job.parameters.schema}}"
               warehouse_id: "{{job.parameters.warehouse_id}}"
-            warehouse_id: ${var.warehouse_id}
 
       max_concurrent_runs: 1
 

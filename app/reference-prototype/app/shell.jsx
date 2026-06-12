@@ -184,7 +184,7 @@ const LakebaseTag = ({ table, tone = 'light' }) => (
 const Logo = ({ size = 26 }) => (
   <div style={{ display:'flex', alignItems:'center', gap:10 }}>
     <img src="assets/databricks-symbol-light.svg" alt="Databricks" style={{ height:size, width:'auto', display:'block', flexShrink:0 }} />
-    <span style={{ fontSize:16, fontWeight:700, color:'#fff', letterSpacing:'-0.01em' }}>Operator Command Center</span>
+    <span style={{ fontSize:16, fontWeight:700, color:'#fff', letterSpacing:'-0.01em' }}>Command Center</span>
   </div>
 );
 

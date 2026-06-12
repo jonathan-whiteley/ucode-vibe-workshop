@@ -21,6 +21,7 @@ dbutils.widgets.text("stores", "20")
 dbutils.widgets.text("items", "50")
 dbutils.widgets.text("feedback", "1000")
 dbutils.widgets.text("seed", "42")
+dbutils.widgets.text("attendee_group", "users")
 
 CATALOG = dbutils.widgets.get("catalog")
 SCHEMA = dbutils.widgets.get("schema")
@@ -30,6 +31,7 @@ N_STORES = int(dbutils.widgets.get("stores"))
 N_ITEMS = int(dbutils.widgets.get("items"))
 N_FEEDBACK = int(dbutils.widgets.get("feedback"))
 SEED = int(dbutils.widgets.get("seed"))
+ATTENDEE_GROUP = dbutils.widgets.get("attendee_group")
 
 # COMMAND ----------
 import random
@@ -390,8 +392,7 @@ print("done.")
 # MAGIC read the data.
 
 # COMMAND ----------
-attendee_group = dbutils.widgets.get("attendee_group") if "attendee_group" in [w.name for w in dbutils.widgets.getAll()] else "users"
-spark.sql(f"GRANT USE CATALOG ON CATALOG {CATALOG} TO `{attendee_group}`")
-spark.sql(f"GRANT USE SCHEMA ON SCHEMA {CATALOG}.{SCHEMA} TO `{attendee_group}`")
-spark.sql(f"GRANT SELECT ON SCHEMA {CATALOG}.{SCHEMA} TO `{attendee_group}`")
-print(f"granted USE CATALOG / USE SCHEMA / SELECT on {CATALOG}.{SCHEMA} to {attendee_group}")
+spark.sql(f"GRANT USE CATALOG ON CATALOG {CATALOG} TO `{ATTENDEE_GROUP}`")
+spark.sql(f"GRANT USE SCHEMA ON SCHEMA {CATALOG}.{SCHEMA} TO `{ATTENDEE_GROUP}`")
+spark.sql(f"GRANT SELECT ON SCHEMA {CATALOG}.{SCHEMA} TO `{ATTENDEE_GROUP}`")
+print(f"granted USE CATALOG / USE SCHEMA / SELECT on {CATALOG}.{SCHEMA} to {ATTENDEE_GROUP}")

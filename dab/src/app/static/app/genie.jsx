@@ -49,8 +49,6 @@ function genieReply(q) {
 const SUGGESTIONS = [
   'What should I prep extra of today?',
   'Why is labor down vs last week?',
-  'What’s wrong with the walk-in cooler?',
-  'Which members should I win back?',
 ];
 
 const GeniePanel = () => {
