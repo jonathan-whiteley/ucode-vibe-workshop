@@ -1,41 +1,33 @@
-# LCE Operator Command Center: Workshop
+# ucode Vibe Coding Workshop
 
-A 3-hour vibe-coding workshop where each attendee builds **Operator Command Center**: a Databricks App that surfaces AI insights across **Labor, Sales & Inventory, and Sentiment** for LCE's store operations.
+A 3-hour workshop format where each attendee uses **ucode** + **ai-dev-kit** to build a working Databricks app end-to-end: a Databricks App (AppKit) with a Genie space, an AI/BI dashboard, FMAPI-powered insights, and a packaged DAB with a multi-task Job — all routed through Databricks AI Gateway. No API keys.
 
-## What gets built
-
-- A Databricks App (AppKit) with 3 pillar tabs + Genie + AI/BI dashboard embed + FMAPI "Recommended Actions" sidebar
-- A Genie space over a curated 5-table schema
-- An AI/BI (Lakeview) dashboard with one tile per pillar
-- A DAB packaging it all up, with a daily multi-task Job
-
-All built with **ucode** + **ai-dev-kit** skills routed through Databricks AI Gateway. No API keys.
+The reference build in this repo is **Operator Command Center**, a sample app that surfaces analytics across **Labor, Sales & Inventory, and Sentiment**. Drop in a different schema and the workshop format works for any domain.
 
 ## Important links
 
 - **ucode:** https://github.com/databricks/ucode
 - **ai-dev-kit:** https://github.com/databricks-solutions/ai-dev-kit/tree/main
-- **Workspace:** https://adb-30827331698809.9.azuredatabricks.net (lce-analytics-dev-adb)
-- **Catalog.schema:** `ioc_sandbox.vibe_workshop`
 
 ## Repo layout
 
 ```
-lce-occ-workshop/
+ucode-vibe-workshop/
 ├── docs/
 │   ├── facilitator-plan.md       # Pre-workshop checklist, agenda, risk register, prompts
 │   └── lab-companion-guide.md    # Attendee-facing: setup, modules, prompts
 ├── data/
 │   ├── README.md                 # Schema, how to regenerate
 │   ├── ddl.sql                   # CREATE TABLE statements
-│   └── generate_data.py          # Synthetic data generation
+│   ├── generate_data.py          # Synthetic data generation (Databricks Connect + Faker)
+│   └── requirements.txt
 ├── dab/                          # Starter DAB skeleton (Module 6)
 └── app/                          # Reference solution App (Modules 2-5)
 ```
 
-## Workshop schema (5 tables)
+## Reference schema (5 tables)
 
-Facts (3) and dims (2) under `ioc_sandbox.vibe_workshop`:
+The sample build uses 3 facts + 2 shared dims:
 
 - `facts_labor_daily` (Labor)
 - `facts_sales_inventory_daily` (Sales & Inventory)
@@ -43,11 +35,12 @@ Facts (3) and dims (2) under `ioc_sandbox.vibe_workshop`:
 - `dims_stores` (shared)
 - `dims_items` (shared)
 
-See `data/README.md` for column details.
+See `data/README.md` for column details. Default target catalog/schema is `jdub_demo.vibe_workshop` (override with CLI flags on `generate_data.py`).
 
 ## Workshop logistics
 
-- **Duration:** 3 hours, 1:00-4:00 PM ET
-- **Audience:** 8-15 LCE engineers/analysts
-- **Pre-work:** 30 min async setup (ucode + IDE + ai-dev-kit)
-- **Facilitator:** Jonathan Whiteley
+- **Duration:** 3 hours
+- **Audience:** 8-15 engineers/analysts
+- **Pre-work:** 30 min async (ucode + IDE + ai-dev-kit)
+
+Specific deployment values (target workspace, catalog, branding) are in the guides under `docs/`.
