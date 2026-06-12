@@ -40,11 +40,17 @@ variables:
   lakebase_instance:
     description: "Name of the Lakebase Postgres instance the App connects to"
     default: "command-center-lakebase"
+  company:
+    description: "Company config to drive synthetic data (item catalog, store locations, review language). See COMPANY_CONFIGS in 01_generate_data.py for valid keys."
+    default: "lce"
 
 targets:
   dev:
     default: true
     mode: development
+    # Strip the auto "[dev <user>]" prefix on resource names
+    presets:
+      name_prefix: ""
     workspace:
       profile: DEFAULT
     variables:

@@ -1,15 +1,16 @@
 # LCE Workshop: Operator Command Center: Facilitator Plan
 
-**Workshop:** Build an AI-powered Operator Command Center using vibe coding agents (UCode + Claude Code / Codex) routed through Databricks AI Gateway.
+**Workshop:** Build an AI-powered Command Center using vibe coding agents (UCode + Claude Code / Codex) routed through Databricks AI Gateway.
 **Audience:** LCE engineers and analysts (8-15 attendees recommended).
 **Duration:** 3 hours, 1:00-4:00 PM ET.
-**End state:** Each attendee has their own deployed Databricks App ("Operator Command Center") that surfaces a Genie space, an AI/BI dashboard, and FMAPI-driven recommendations across three operational pillars: **Labor, Sales & Inventory, Sentiment**. Everything is packaged as a DAB with a multi-task Job and a dev/prod CI-CD path.
+**End state:** Each attendee has their own deployed Databricks App that surfaces a Genie space, an AI/BI dashboard, and FMAPI-driven recommendations across three operational pillars: **Labor, Inventory, Guest Feedback**. Everything is packaged as a Databricks Asset Bundle.
 
 ### Quick Links
 
+- **Workshop repo:** [github.com/jonathan-whiteley/ucode-vibe-workshop](https://github.com/jonathan-whiteley/ucode-vibe-workshop)
 - **ucode:** [github.com/databricks/ucode](https://github.com/databricks/ucode)
 - **ai-dev-kit:** [github.com/databricks-solutions/ai-dev-kit](https://github.com/databricks-solutions/ai-dev-kit/tree/main)
-- **Workspace:** [adb-30827331698809.9.azuredatabricks.net](https://adb-30827331698809.9.azuredatabricks.net) (lce-analytics-dev-adb)
+- **LCE workspace:** [adb-30827331698809.9.azuredatabricks.net](https://adb-30827331698809.9.azuredatabricks.net) (lce-analytics-dev-adb)
 - **Catalog.schema:** `ioc_sandbox.vibe_workshop`
 
 ---
@@ -20,10 +21,10 @@
 |---|---|---|---|
 | 12:30-1:00 | Pre-workshop setup (async) | 30 min | `ucode` installed, IDE configured, ai-dev-kit skills pulled |
 | 1:00-1:10 | Welcome + finished-app demo | 10 min | Attendees see what they'll build; environment table reviewed |
-| 1:10-1:20 | Module 1: Explore the data | 10 min | Each attendee has schema summary for all 4 tables |
+| 1:10-1:20 | Module 1: Explore the data | 10 min | Each attendee has schema summary for all 8 tables |
 | 1:20-1:40 | Module 2: Scaffold the App shell | 20 min | Empty AppKit app deployed and visible in browser |
 | 1:40-2:00 | Module 3: Build the Genie space | 20 min | Genie space answers natural-language questions over the 3 pillars |
-| 2:00-2:20 | Module 4: Build the AI/BI dashboard | 20 min | Dashboard with 3 tiles, one per pillar |
+| 2:00-2:20 | Module 4: Build the AI/BI dashboard | 20 min | Dashboard with one widget per pillar |
 | 2:20-2:30 | Break | 10 min | |
 | 2:30-3:10 | Module 5: Integrate + AI insights + LCE branding | 40 min | App embeds Genie + dashboard, FMAPI "Recommended Actions" panel, LCE colors/logo |
 | 3:10-3:40 | Module 6: DAB + multi-task Job + CI-CD | 30 min | Bundle deployed to dev target; multi-task job runs end-to-end |
@@ -38,48 +39,58 @@
 
 - [ ] **AI Gateway enabled** with attendee group access to `databricks-claude-sonnet-4-6` (or chosen endpoint)
 - [ ] **Databricks Apps enabled** in the workspace
-- [ ] **Foundation Model API** endpoint accessible to attendees (`databricks-meta-llama-3-3-70b-instruct` or similar via `ai_query()`)
+- [ ] **Foundation Model API** endpoint accessible to attendees (`databricks-meta-llama-3-3-70b-instruct` via `ai_query()`)
 - [ ] Attendee group has: Databricks SQL entitlement, workspace access, cluster create or serverless jobs entitlement
-- [ ] LCE branding assets received: logo URL, primary brand color hex
+- [ ] LCE branding assets received: logo SVG, primary brand color hex (already in `branding/lce/`)
 
-### T-1 week: data + schemas
+### T-1 week: data, Lakebase, reference assets
 
-- [ ] Generate synthetic data using `/databricks-synthetic-data-gen` skill. **4 tables total** under `ioc_sandbox.vibe_workshop.*` (see schema below)
-- [ ] Create catalog `ioc_sandbox` and schema `ioc_sandbox.vibe_workshop`; grant `USE CATALOG`, `USE SCHEMA`, `SELECT` to attendee group
-- [ ] Create per-attendee sandbox schemas: `ioc_sandbox.<initials>_sandbox` with full DDL on schema + `CREATE` privs
-- [ ] Pre-create or document the SQL warehouse (Pro or Serverless) and grant `CAN USE` to attendees
-- [ ] Build a **reference solution App** (yours) ahead of time so attendees can see the finished product in the demo
+- [ ] Clone the workshop repo: `git clone https://github.com/jonathan-whiteley/ucode-vibe-workshop`
+- [ ] Authenticate to LCE: `databricks auth login --host https://adb-30827331698809.9.azuredatabricks.net --profile lce`
+- [ ] Deploy the facilitator bundle: `cd dab && databricks bundle deploy -t lce`
+- [ ] Run the setup job (data gen + Lakebase DDL + reference Genie space): `databricks bundle run command_center_setup -t lce`
+- [ ] Start the reference App: `databricks bundle run command_center_app -t lce`
+- [ ] Verify the reference dashboard renders in the workspace UI
+
+The bundle creates:
+- 8-table workshop dataset under `ioc_sandbox.vibe_workshop` (60 days, ending workshop date 2026-06-22)
+- Shared Lakebase instance `command-center-lakebase` with write-back tables for purchase orders, review replies, and schedule approvals
+- A reference Genie space, AI/BI dashboard, and App (your fallback if any attendee gets stuck)
 
 ### T-3 days: confirm tooling
 
-- [ ] Confirm ai-dev-kit GitHub URL with attendees and verify the skills load via `ucode` / agent
-- [ ] Build a **starter DAB skeleton** at `<STARTER_DAB_REPO_URL>` so Module 6 doesn't have to write a DAB from scratch
-- [ ] Send the **Lab Companion Guide** (separate doc) to attendees with the pre-workshop setup steps and the environment table for them to fill in
+- [ ] Verify all attendees have access to the LCE workspace and the attendee group has the entitlements above
+- [ ] Smoke-test the reference Genie space with 2-3 questions per pillar
+- [ ] Run the reference dashboard once to warm the SQL warehouse
+- [ ] Send the **Lab Companion Guide** (separate Google Doc) to attendees with the pre-workshop setup steps
 
 ### T-1 day: send attendees
 
-- [ ] Workspace URL, catalog name, their sandbox schema name, warehouse name, AI Gateway model endpoint, FMAPI endpoint name
-- [ ] LCE logo URL + brand color
+- [ ] Workspace URL, catalog name, warehouse name, AI Gateway model endpoint, FMAPI endpoint name
+- [ ] LCE branding folder path in the repo (`branding/lce/`) — opt-in
 - [ ] Pre-workshop setup instructions (Step 0 in the Lab Companion Guide)
 
 ---
 
-## Synthetic Data Schema (5 tables: 3 facts + 2 dims)
+## Synthetic Data Schema (8 tables: 3 dims + 5 facts)
 
-The workshop runs on a small, dimensionally-modeled dataset so attendees spend their time on the *AI agent loop*, not on data wrangling. Shared dims (`dims_stores`, `dims_items`) join into multiple facts.
+Materialized in `ioc_sandbox.vibe_workshop` (dev mirror at `jdub_demo.vibe_workshop`). 60 days of history anchored to **2026-06-22** so `current_date()` queries on workshop day return real rows. Every chart and AI insight in the reference design has a backing column or table; nothing is computed on-the-fly via AI calls.
 
-**Facts (3):**
+**Dims (3):**
+- `dims_stores` — 20 stores at real LCE-presence locations (Detroit, Chicago, Houston, etc.)
+- `dims_items` — 50 SKUs (pizza ingredients, beverages, packaging)
+- `dims_employees` — ~12 per store (cook / cashier / lead / manager mix)
 
-- `ioc_sandbox.vibe_workshop.facts_labor_daily` (Labor): `date`, `store_id`, `role`, `headcount`, `total_hours`, `labor_cost`
-- `ioc_sandbox.vibe_workshop.facts_sales_inventory_daily` (Sales & Inventory): `date`, `store_id`, `sku`, `units_sold`, `revenue`, `on_hand_eod`, `reorder_point`
-- `ioc_sandbox.vibe_workshop.facts_customer_feedback` (Sentiment): `feedback_id`, `date`, `store_id`, `channel`, `rating`, `feedback_text`, `nps`
+**Facts (5):**
+- `facts_sales_daypart` — daypart-grain revenue + forecast (breakfast / lunch / dinner / late)
+- `facts_labor_daypart` — daypart × role-grain crew + cost + forecast
+- `facts_sales_inventory_daily` — SKU-grain inventory + per-SKU sales
+- `facts_purchase_orders` — pre-staged POs with vendor info
+- `facts_customer_feedback` — guest reviews with pre-staged `sentiment_label`, `theme`, and `ai_drafted_reply` columns
 
-**Dims (2, shared across facts):**
+Item catalog and store roster are driven by a `company` config in the data generator. Default is `lce` (Little Caesars items + locations); swap to `qsr_mexican` or add a new entry in `COMPANY_CONFIGS` to re-skin for another customer.
 
-- `ioc_sandbox.vibe_workshop.dims_stores`: `store_id`, `store_name`, `region`, `city`, `state`, `square_footage`
-- `ioc_sandbox.vibe_workshop.dims_items`: `sku`, `item_name`, `category`, `retail_price`, `cost`
-
-Generate **~365 days × 20 stores × ~50 SKUs** worth of rows. Plenty for Genie/Dashboard/FMAPI to chew on without being heavy.
+See `data/README.md` and `docs/data-audit.md` for column-level details.
 
 ---
 
@@ -93,8 +104,8 @@ Send this to attendees 1-3 days before. The Lab Companion Guide has the same ins
 4. Open VSCode (or IDE of choice). Open a terminal.
 5. Pick a coding agent: `ucode claude` (or `ucode codex`). On first launch, enter the workspace URL, complete OAuth.
 6. Add Databricks MCP servers: `ucode configure mcp`. Pick **Databricks SQL** and **Managed Databricks MCPs**.
-7. Pull the ai-dev-kit skills: prompt your agent to set up the skills from https://github.com/databricks-solutions/ai-dev-kit/tree/main.
-8. Verify: ask the agent "List the tables in `ioc_sandbox.vibe_workshop`". If you see 5 tables (3 `facts_*`, 2 `dims_*`), you're ready.
+7. Pull the ai-dev-kit skills: prompt the agent to set up the skills from https://github.com/databricks-solutions/ai-dev-kit/tree/main.
+8. Verify: ask the agent "List the tables in `ioc_sandbox.vibe_workshop`". If you see 8 tables (3 `dims_*`, 5 `facts_*`), you're ready.
 
 If any of these fail, contact the facilitator in the workshop Slack channel **before** the workshop starts.
 
@@ -110,7 +121,7 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 
 **Prompt:**
 
-> Explore `ioc_sandbox.vibe_workshop`. Show me schemas, row counts, sample rows. Save a summary as `schema_summary.md`.
+> Explore `ioc_sandbox.vibe_workshop`. Show me schemas, row counts, sample rows for all 8 tables. Save a summary as `schema_summary.md`.
 
 ---
 
@@ -120,7 +131,7 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 
 **Prompt:**
 
-> Scaffold an AppKit app called `<initials>-operator-command-center` with 3 tabs (Labor, Sales & Inventory, Sentiment) and placeholder content. SP needs read on `ioc_sandbox.vibe_workshop`, full on my sandbox, `CAN_USE` on warehouse `<WAREHOUSE_NAME>`. Deploy it and open the URL.
+> Scaffold an AppKit app called `<initials>-command-center` with 3 tabs (Labor, Inventory, Guest Feedback) and placeholder content. The app's service principal needs SELECT on the 8 tables in `ioc_sandbox.vibe_workshop` and `CAN_USE` on warehouse `<WAREHOUSE_NAME>`. Deploy and open the URL.
 
 **Critical:** Drill the `apps update --json` then `apps deploy` order. The ai-dev-kit skills handle this, but it's the #1 failure point if attendees try to shortcut.
 
@@ -130,7 +141,7 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 
 **Prompt:**
 
-> Create a Genie space `<initials> Operator Command Center` over all tables in `ioc_sandbox.vibe_workshop`, warehouse `<WAREHOUSE_NAME>`. Add 6 sample questions (2 per pillar) and 4 metric definitions. Test it.
+> Create a Genie space `<initials> Command Center` over all tables in `ioc_sandbox.vibe_workshop`, warehouse `<WAREHOUSE_NAME>`. Add 6 sample questions (2 per pillar: Labor / Inventory / Guest Feedback) and 4 metric definitions. Test it.
 
 **Capture:** Genie space ID for Module 5.
 
@@ -140,7 +151,7 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 
 **Prompt:**
 
-> Create an AI/BI dashboard `<initials> Operator Insights`, warehouse `<WAREHOUSE_NAME>`. One tile per pillar, most insightful metric for each. Publish.
+> Create an AI/BI dashboard `<initials> Operator Insights`, warehouse `<WAREHOUSE_NAME>`. Tiles for: labor % of sales over time, sales by daypart today, SKUs below par by category, and sentiment timeline. Publish.
 
 **Capture:** Dashboard ID for Module 5.
 
@@ -160,7 +171,7 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 
 > Add a "Recommended Actions" sidebar that uses `ai_query()` against `<FMAPI_ENDPOINT>` to recommend top 3 actions for today, based on the 3-pillar KPIs. Store dropdown.
 
-> Apply LCE branding: logo `<LCE_LOGO_URL>`, primary color `<LCE_PRIMARY_COLOR>`, title "Operator Command Center | LCE", dark navbar.
+> Apply LCE branding from `branding/lce/` in the workshop repo: logo `branding/lce/logo.svg`, primary color `#FF671B`. Dark navbar. Page title "Command Center | LCE".
 
 > Redeploy.
 
@@ -170,15 +181,15 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 
 ### Module 6: DAB + multi-task Job + CI-CD (30 min, 3:10-3:40)
 
-**Pre-built starter:** Provide a DAB skeleton at `<STARTER_DAB_REPO_URL>`. Attendees fork and customize.
+**Pre-built starter:** The workshop repo contains a working DAB at `dab/`. Attendees clone, customize, and deploy.
 
 **Prompts:**
 
-> Clone `<STARTER_DAB_REPO_URL>`. Customize it to include my App, Genie space, dashboard.
+> Clone https://github.com/jonathan-whiteley/ucode-vibe-workshop. Open `dab/`. Customize `databricks.yml` and the resource files to point at my App `<initials>-command-center`, my Genie space `<GENIE_SPACE_ID>`, and my dashboard `<DASHBOARD_ID>` instead of the reference copies.
 
-> Add a 6am daily job with 3 tasks: refresh sandbox tables, score sentiment via `<FMAPI_ENDPOINT>`, redeploy the app.
+> Add a daily job at 6am ET with 3 tasks: refresh sandbox tables, score new sentiment via `ai_query()` and `<FMAPI_ENDPOINT>`, redeploy the App.
 
-> Two targets: dev and prod. Deploy to dev. Run the job once.
+> Deploy to dev and run the job once. Walk me through how I'd deploy to prod when I'm ready.
 
 ---
 
@@ -195,12 +206,12 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 | Risk | Likelihood | Mitigation |
 |---|---|---|
 | AI Gateway not granted to all attendees | High | Test 1 week before; have facilitator's account as backup |
-| App deploy fails on first run (resources not registered) | High | Trust the ai-dev-kit skill to do `apps update --json` before `apps deploy`; have a working example to share |
-| Synthetic data has bad joins / null columns | Medium | Smoke test: ask Genie 3 questions and build 1 dashboard tile before the workshop |
+| App deploy fails on first run (resources not registered) | High | Trust the ai-dev-kit skill to do `apps update --json` before `apps deploy`; the reference App in this repo shows the working pattern |
+| Synthetic data has bad joins / null columns | Low | Reference Genie/dashboard exercised the schema during T-1 week setup |
 | FMAPI endpoint slow / over quota | Medium | Pre-warm; have a backup endpoint identified |
 | Attendees skip pre-workshop setup | High | Send reminder 24h before; reserve 15 min at start for stragglers (cuts into Module 1) |
-| DAB module overruns | Medium | Provide a starter repo; cut prod-deploy step if time short |
-| LCE branding assets late | Low | Use LCE primary color guess + placeholder logo; swap in real assets post-workshop |
+| DAB module overruns | Low | The starter at `dab/` is fully working; attendees customize, not build from scratch |
+| Lakebase write-back fails (perm error) | Medium | The reference DAB grants the App SP `CAN_CONNECT_AND_CREATE` on the shared `command-center-lakebase`; if an attendee's App can't write, they can fall back to read-only demo |
 
 ---
 
@@ -210,13 +221,14 @@ All attendee-created assets include their initials to avoid collisions:
 
 | Asset | Naming |
 |---|---|
-| Sandbox schema | `ioc_sandbox.<initials>_sandbox` |
-| App name | `<initials>-operator-command-center` |
-| Genie space | `<initials> Operator Command Center` |
+| App name | `<initials>-command-center` |
+| Genie space | `<initials> Command Center` |
 | Dashboard | `<initials> Operator Insights` |
-| DAB workspace path | `/Workspace/Users/<email>/.bundle/occ-<initials>/` |
-| Job name | `occ-<initials>-daily-refresh` |
-| Derived tables | `ioc_sandbox.<initials>_sandbox.<table_name>` |
+| DAB bundle | `<initials>-command-center` |
+| Job name | `<initials>-command-center-refresh` |
+| Sandbox schema (optional) | `ioc_sandbox.<initials>_sandbox` (only if attendees write derived tables) |
+
+The shared workshop schema `ioc_sandbox.vibe_workshop` and the shared `command-center-lakebase` are read+write for all attendees (Lakebase) and read-only (UC tables).
 
 ---
 
@@ -224,3 +236,4 @@ All attendee-created assets include their initials to avoid collisions:
 
 - **Lab Companion Guide** (attendee-facing): https://docs.google.com/document/d/1r4urTIP6c1veje6WIE7iLS0n-qxQXP551YLlrv1eaJ8/edit
 - **Workshop Prerequisites** (admin-facing): https://docs.google.com/document/d/10SRD1IfHHkqajmbExR2iswtbH2jjy2jtblq6el_pA0M/edit
+- **Repo:** https://github.com/jonathan-whiteley/ucode-vibe-workshop

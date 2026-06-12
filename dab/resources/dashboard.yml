@@ -7,7 +7,7 @@
 resources:
   dashboards:
     command_center_dash:
-      display_name: "[${bundle.target}] Operator Command Center"
+      display_name: "Operator Command Center"
       file_path: ../src/dashboards/operator_command_center.lvdash.json
       warehouse_id: ${var.warehouse_id}
       dataset_catalog: ${var.catalog}

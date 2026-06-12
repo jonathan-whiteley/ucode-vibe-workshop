@@ -8,7 +8,7 @@
 resources:
   jobs:
     command_center_setup:
-      name: "[${bundle.target}] Operator Command Center setup"
+      name: "Operator Command Center setup"
       description: |
         One-shot setup for the ucode Vibe Coding workshop.
         Tasks run sequentially:
@@ -32,6 +32,8 @@ resources:
           default: ${var.warehouse_id}
         - name: attendee_group
           default: ${var.attendee_group}
+        - name: company
+          default: ${var.company}
 
       # Serverless notebook compute (no cluster required).
       environments:
@@ -54,6 +56,7 @@ resources:
               feedback: "1000"
               seed: "42"
               attendee_group: "{{job.parameters.attendee_group}}"
+              company: "{{job.parameters.company}}"
 
         - task_key: init_lakebase
           environment_key: default
