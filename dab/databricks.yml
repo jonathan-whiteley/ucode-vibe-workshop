@@ -1,0 +1,58 @@
+# Databricks Asset Bundle for the ucode Vibe Coding Workshop.
+#
+# This bundle is for the FACILITATOR to run once in the target workspace
+# (dev or LCE prod) to set up:
+#   - Setup job (synthetic data generation + Genie space + Lakebase DDL)
+#   - Lakebase instance for write-back (shared across all attendees)
+#   - Reference AI/BI dashboard (one per facilitator)
+#   - Reference App ("Operator Command Center" Homebase build)
+#
+# Attendees do NOT run this bundle. They build their own Genie space,
+# dashboard, and App during the workshop using prompts from the lab
+# companion guide. This bundle is the facilitator's fallback reference.
+
+bundle:
+  name: ucode-vibe-workshop
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: "Unity Catalog catalog where workshop data lives"
+    default: "ioc_sandbox"
+  schema:
+    description: "Schema for the 8-table workshop dataset"
+    default: "vibe_workshop"
+  warehouse_id:
+    description: "SQL warehouse used by the job, dashboard, and app"
+    lookup:
+      warehouse: "Serverless Starter Warehouse"
+  fmapi_endpoint:
+    description: "Foundation Model API endpoint for ai_query() calls"
+    default: "databricks-meta-llama-3-3-70b-instruct"
+  data_end_date:
+    description: "Latest date in the synthetic data, YYYY-MM-DD"
+    default: "2026-06-22"
+  attendee_group:
+    description: "Workspace group of workshop attendees (gets SELECT on tables and INSERT on Lakebase tables)"
+    default: "users"
+
+targets:
+  dev:
+    default: true
+    mode: development
+    workspace:
+      profile: DEFAULT
+    variables:
+      catalog: "jdub_demo"
+      schema: "vibe_workshop"
+
+  lce:
+    mode: production
+    workspace:
+      profile: lce
+    variables:
+      catalog: "ioc_sandbox"
+      schema: "vibe_workshop"
+      # Override warehouse_id and attendee_group at deploy time with --var

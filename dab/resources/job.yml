@@ -1,0 +1,76 @@
+# Setup job: runs the data generator, provisions Lakebase write-back tables,
+# and creates the reference Genie space. The facilitator runs this once per
+# target environment before the workshop.
+#
+#   databricks bundle deploy -t lce
+#   databricks bundle run workshop_setup -t lce
+
+resources:
+  jobs:
+    workshop_setup:
+      name: "[${bundle.target}] OCC workshop setup"
+      description: |
+        One-shot setup for the ucode Vibe Coding workshop.
+        Tasks run sequentially:
+          1. generate_data       - synthesize 8 workshop tables
+          2. init_lakebase       - DDL for shared write-back tables
+          3. create_genie_space  - reference Genie space over the tables
+      tags:
+        purpose: workshop
+        owner: facilitator
+
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+        - name: data_end_date
+          default: ${var.data_end_date}
+        - name: lakebase_instance_name
+          default: vibe-workshop-lakebase
+        - name: warehouse_id
+          default: ${var.warehouse_id}
+        - name: attendee_group
+          default: ${var.attendee_group}
+
+      tasks:
+        - task_key: generate_data
+          notebook_task:
+            notebook_path: ../src/notebooks/01_generate_data.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+              end_date: "{{job.parameters.data_end_date}}"
+              days: "60"
+              stores: "20"
+              items: "50"
+              feedback: "1000"
+              seed: "42"
+            warehouse_id: ${var.warehouse_id}
+
+        - task_key: init_lakebase
+          depends_on:
+            - task_key: generate_data
+          notebook_task:
+            notebook_path: ../src/notebooks/02_init_lakebase.py
+            base_parameters:
+              lakebase_instance_name: "{{job.parameters.lakebase_instance_name}}"
+              attendee_group: "{{job.parameters.attendee_group}}"
+            warehouse_id: ${var.warehouse_id}
+
+        - task_key: create_genie_space
+          depends_on:
+            - task_key: generate_data
+          notebook_task:
+            notebook_path: ../src/notebooks/03_create_genie_space.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              schema: "{{job.parameters.schema}}"
+              warehouse_id: "{{job.parameters.warehouse_id}}"
+            warehouse_id: ${var.warehouse_id}
+
+      max_concurrent_runs: 1
+
+      permissions:
+        - level: CAN_VIEW
+          group_name: ${var.attendee_group}
