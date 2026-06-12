@@ -140,6 +140,27 @@ const FeedbackView = () => {
   const [filter, setFilter] = useState('needs');
   const needs = REVIEWS.filter(r => r.needsReply && !reviewsReplied.has(r.id)).length;
   const shown = REVIEWS.filter(r => filter==='all' ? true : filter==='needs' ? (r.needsReply && !reviewsReplied.has(r.id)) : r.sentiment==='pos');
+
+  // Live theme rollups + sentiment timeline.
+  const [liveThemes, setLiveThemes] = useState(null);
+  const [liveTimeline, setLiveTimeline] = useState(null);
+  useEffect(() => {
+    fetch('/api/feedback/themes', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveThemes).catch(() => {});
+    fetch('/api/feedback/sentiment-timeline', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveTimeline).catch(() => {});
+  }, []);
+  const themeRows = liveThemes
+    ? liveThemes.map(t => ({
+        theme: t.theme.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        count: t.count_7d,
+        dir: t.count_7d >= (t.count_30d / 4) ? 'up' : 'flat',
+        level: t.pct_negative_7d >= 50 ? 'warn' : t.pct_negative_7d >= 30 ? 'info' : 'ok',
+      }))
+    : FEEDBACK_THEMES;
+  const sentimentRows = liveTimeline
+    ? liveTimeline.map(d => ({ date: d.date.slice(5), pos: d.pos, neu: d.neu, neg: d.neg }))
+    : SENTIMENT_30D;
   return (
     <div style={{ flex:1, overflow:'auto', background:'var(--db-oat-light)' }}>
       <div style={{ padding:'28px 32px 40px', maxWidth:1000, margin:'0 auto' }}>
@@ -154,7 +175,7 @@ const FeedbackView = () => {
 
         {/* themes */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:18 }}>
-          {FEEDBACK_THEMES.map(t => {
+          {themeRows.map(t => {
             const lv = LEVEL[t.level];
             return (
               <Card key={t.theme} pad="13px 15px">
@@ -169,7 +190,7 @@ const FeedbackView = () => {
         </div>
 
         <div style={{ marginBottom:18 }}>
-          <SentimentTimeline data={SENTIMENT_30D} />
+          <SentimentTimeline data={sentimentRows} />
         </div>
 
         <div style={{ marginBottom:18 }}>

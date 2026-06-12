@@ -133,7 +133,28 @@ const CategoryFill = ({ cats }) => (
 const InventoryView = () => {
   const { reordersReleased, releasePO } = useApp();
   const openCount = REORDERS.filter(p => !reordersReleased.has(p.id)).length;
-  const belowPar = REORDERS.flatMap(p => p.items).length;
+
+  // Live stock health + category fill from /api/inventory/*. Falls back to mocks.
+  const [liveHealth, setLiveHealth] = useState(null);
+  const [liveCats, setLiveCats] = useState(null);
+  useEffect(() => {
+    fetch('/api/inventory/health', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveHealth).catch(() => {});
+    fetch('/api/inventory/by-category', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveCats).catch(() => {});
+  }, []);
+
+  const health = liveHealth
+    ? { atPar: liveHealth.at_par, total: liveHealth.total_skus, below: liveHealth.below_par }
+    : { atPar: STOCK_HEALTH.atPar, total: STOCK_HEALTH.total, below: STOCK_HEALTH.below };
+  const cats = liveCats
+    ? liveCats.map(c => ({ name: c.category, pct: c.pct_at_par, skus: c.sku_count,
+        color: c.category === 'meat' ? 'var(--db-lava-600)' :
+               c.category === 'veggie' ? 'var(--db-green-600)' :
+               c.category === 'bread_cheese' ? 'var(--db-yellow-600)' :
+               c.category === 'pantry' ? 'var(--db-blue-600)' : 'var(--db-maroon-600)' }))
+    : STOCK_CATS;
+  const belowPar = health.below;
   const atRisk = STOCK_WATCH.filter(i => i.daysCover <= i.lead).length;
   const valNow = STOCK_VALUE_TREND[STOCK_VALUE_TREND.length-1];
   return (
@@ -147,14 +168,14 @@ const InventoryView = () => {
         <div style={{ background:'var(--db-navy-900)', borderRadius:18, padding:'26px 30px', position:'relative', overflow:'hidden', marginBottom:16 }}>
           <svg viewBox="0 0 24 24" width="300" height="300" fill="none" stroke="var(--db-navy-700)" strokeWidth="0.45" style={{ position:'absolute', right:-50, top:-70, opacity:0.5 }}><path d={PATHS.box} /></svg>
           <div style={{ display:'flex', gap:30, alignItems:'center', position:'relative', flexWrap:'wrap' }}>
-            <StockRing atPar={STOCK_HEALTH.atPar} total={STOCK_HEALTH.total} />
+            <StockRing atPar={health.atPar} total={health.total} />
             <div style={{ flex:1, minWidth:260 }}>
               <div className="db-eyebrow" style={{ color:'var(--db-lava-400)', fontSize:11.5, fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase' }}>Stock health</div>
               <h2 style={{ fontSize:27, fontWeight:500, color:'#fff', letterSpacing:'-0.02em', margin:'8px 0 0', lineHeight:1.12 }}>
                 {belowPar} items below par — <span style={{ color:'var(--db-lava-400)' }}>{atRisk} at stockout risk</span>
               </h2>
               <p style={{ fontSize:13.5, color:'var(--db-navy-300)', margin:'10px 0 0', maxWidth:440, lineHeight:1.5 }}>
-                {STOCK_HEALTH.atPar} of {STOCK_HEALTH.total} SKUs are at or above par. Carnitas runs out before its next delivery — release the staged orders to recover.
+                {health.atPar} of {health.total} SKUs are at or above par. Carnitas runs out before its next delivery — release the staged orders to recover.
               </p>
             </div>
             <div style={{ display:'flex', gap:26, paddingLeft:26, borderLeft:'1px solid var(--db-navy-700)' }}>
@@ -184,7 +205,7 @@ const InventoryView = () => {
           <Card pad={20}>
             <div style={{ fontSize:14.5, fontWeight:500, color:'var(--db-navy-800)', marginBottom:4 }}>Fill rate by category</div>
             <div style={{ fontSize:12, color:'var(--db-gray-text)', marginBottom:18 }}>On-hand as % of par</div>
-            <CategoryFill cats={STOCK_CATS} />
+            <CategoryFill cats={cats} />
           </Card>
         </div>
 

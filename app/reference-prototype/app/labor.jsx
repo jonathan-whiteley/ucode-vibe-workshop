@@ -151,9 +151,9 @@ const MiniStat = ({ label, value, delta, isMoney }) => (
     </div>
   </div>
 );
-const DaypartCard = ({ id, override, onOverride, onClear, showConf }) => {
+const DaypartCard = ({ id, override, onOverride, onClear, showConf, baselineOverride }) => {
   const th = DP_THEME[id];
-  const baseline = DP_BASELINE[id];
+  const baseline = baselineOverride ?? DP_BASELINE[id];
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const revenue = override ?? baseline;
@@ -358,9 +358,24 @@ const LaborView = () => {
   const clearOverride = (dp) => setOverrides(o => { const x = { ...o }; delete x[dp]; return x; });
   const overrideCount = Object.keys(overrides).length;
 
+  // Live daypart forecasts from /api/labor/tomorrow. Falls back to DP_BASELINE
+  // when the API is unreachable (standalone prototype mode).
+  const [live, setLive] = useState(null);
+  useEffect(() => {
+    fetch('/api/labor/tomorrow', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(setLive)
+      .catch(() => setLive(null));
+  }, []);
+  const baselines = {};
+  if (live && Array.isArray(live.cards)) {
+    live.cards.forEach(c => { baselines[c.daypart] = c.forecast_revenue; });
+  }
+  const baselineFor = (dp) => baselines[dp] ?? DP_BASELINE[dp];
+
   let totals = { rev:0, cost:0, baseRev:0, baseCost:0, headcount:0 }, baseHc = 0;
   DP_IDS.forEach(dp => {
-    const base = DP_BASELINE[dp], cur = overrides[dp] ?? base;
+    const base = baselineFor(dp), cur = overrides[dp] ?? base;
     const bC = computeStaffing(dp, base), cC = computeStaffing(dp, cur);
     totals.baseRev += base; totals.rev += cur; totals.baseCost += bC.cost; totals.cost += cC.cost;
     totals.headcount += cC.headcount; baseHc += bC.headcount;
@@ -375,7 +390,7 @@ const LaborView = () => {
         <PlannerHero totals={totals} overrideCount={overrideCount} refreshing={refreshing} onRefresh={refresh} lastRun={lastRun} baseHc={baseHc} />
 
         <div style={{ marginTop:-2 }}>
-          <AIRec tone="navy" action="Bump lunch +12%" onAction={() => setOverride('lunch', Math.round(DP_BASELINE.lunch*1.12))}>
+          <AIRec tone="navy" action="Bump lunch +12%" onAction={() => setOverride('lunch', Math.round(baselineFor('lunch')*1.12))}>
             Tomorrow is a <strong>Giants home day game</strong> two blocks over. Genie sees lunch running <strong>~12% hot</strong> versus a normal Saturday — historically worth a <strong>+2 cook</strong> bump from 11:30–1:30. The rest of the day tracks to forecast.
           </AIRec>
         </div>
@@ -394,7 +409,7 @@ const LaborView = () => {
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
             {DP_IDS.map(dp => (
-              <DaypartCard key={dp} id={dp} override={overrides[dp]} onOverride={v=>setOverride(dp,v)} onClear={()=>clearOverride(dp)} showConf={showConf} />
+              <DaypartCard key={dp} id={dp} baselineOverride={baselines[dp]} override={overrides[dp]} onOverride={v=>setOverride(dp,v)} onClear={()=>clearOverride(dp)} showConf={showConf} />
             ))}
           </div>
           {scheduleApproved && overrideCount === 0 && (
