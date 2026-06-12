@@ -14,8 +14,6 @@
 # COMMAND ----------
 dbutils.widgets.text("lakebase_instance_name", "command-center-lakebase")
 dbutils.widgets.text("attendee_group", "users")
-LAKEBASE_NAME = dbutils.widgets.get("lakebase_instance_name")
-ATTENDEE_GROUP = dbutils.widgets.get("attendee_group")
 
 # COMMAND ----------
 # MAGIC %pip install -q psycopg2-binary databricks-sdk
@@ -24,6 +22,10 @@ ATTENDEE_GROUP = dbutils.widgets.get("attendee_group")
 dbutils.library.restartPython()
 
 # COMMAND ----------
+# Re-read widgets after the Python restart wipes the global namespace.
+LAKEBASE_NAME = dbutils.widgets.get("lakebase_instance_name")
+ATTENDEE_GROUP = dbutils.widgets.get("attendee_group")
+
 import os
 from databricks.sdk import WorkspaceClient
 import psycopg2

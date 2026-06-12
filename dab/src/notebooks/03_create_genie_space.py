@@ -13,6 +13,15 @@
 dbutils.widgets.text("catalog", "ioc_sandbox")
 dbutils.widgets.text("schema", "vibe_workshop")
 dbutils.widgets.text("warehouse_id", "")
+
+# COMMAND ----------
+# MAGIC %pip install -q databricks-sdk
+
+# COMMAND ----------
+dbutils.library.restartPython()
+
+# COMMAND ----------
+# Re-read widgets after the Python restart wipes the global namespace.
 CATALOG = dbutils.widgets.get("catalog")
 SCHEMA = dbutils.widgets.get("schema")
 WAREHOUSE_ID = dbutils.widgets.get("warehouse_id")
@@ -22,13 +31,6 @@ if not WAREHOUSE_ID:
 
 SPACE_TITLE = "Command Center reference"
 
-# COMMAND ----------
-# MAGIC %pip install -q databricks-sdk
-
-# COMMAND ----------
-dbutils.library.restartPython()
-
-# COMMAND ----------
 import json
 from databricks.sdk import WorkspaceClient
 
