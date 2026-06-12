@@ -20,7 +20,7 @@ WAREHOUSE_ID = dbutils.widgets.get("warehouse_id")
 if not WAREHOUSE_ID:
     raise ValueError("warehouse_id task parameter is required")
 
-SPACE_TITLE = "OCC reference: Operator Command Center"
+SPACE_TITLE = "Command Center reference"
 
 # COMMAND ----------
 # MAGIC %pip install -q databricks-sdk

@@ -138,18 +138,44 @@ const ReviewCard = ({ rv, replied, onReply }) => {
 const FeedbackView = () => {
   const { reviewsReplied, replyReview } = useApp();
   const [filter, setFilter] = useState('needs');
-  const needs = REVIEWS.filter(r => r.needsReply && !reviewsReplied.has(r.id)).length;
-  const shown = REVIEWS.filter(r => filter==='all' ? true : filter==='needs' ? (r.needsReply && !reviewsReplied.has(r.id)) : r.sentiment==='pos');
 
-  // Live theme rollups + sentiment timeline.
+  // Live theme rollups + sentiment timeline + reviews list.
   const [liveThemes, setLiveThemes] = useState(null);
   const [liveTimeline, setLiveTimeline] = useState(null);
+  const [liveReviews, setLiveReviews] = useState(null);
   useEffect(() => {
     fetch('/api/feedback/themes', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null).then(setLiveThemes).catch(() => {});
     fetch('/api/feedback/sentiment-timeline', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null).then(setLiveTimeline).catch(() => {});
+    fetch('/api/feedback/reviews?limit=12', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveReviews).catch(() => {});
   }, []);
+
+  // Map live rows to the ReviewCard shape.
+  const reviews = liveReviews
+    ? liveReviews.map(r => {
+        const fb = r.feedback_id || '';
+        const tail = fb.slice(-3) || 'GU';
+        const initials = (tail[0] || 'G') + (tail[1] || 'U');
+        return {
+          id: fb,
+          author: `Guest ${tail}`,
+          initials: initials.toUpperCase(),
+          rating: r.rating,
+          channel: (r.channel || '').replace(/^\w/, c => c.toUpperCase()),
+          time: r.date,
+          sentiment: r.sentiment_label,
+          needsReply: !!r.needs_reply,
+          text: r.feedback_text,
+          aiDraft: r.ai_drafted_reply || '',
+        };
+      })
+    : REVIEWS;
+
+  const needs = reviews.filter(r => r.needsReply && !reviewsReplied.has(r.id)).length;
+  const shown = reviews.filter(r => filter==='all' ? true : filter==='needs' ? (r.needsReply && !reviewsReplied.has(r.id)) : r.sentiment==='pos');
+
   const themeRows = liveThemes
     ? liveThemes.map(t => ({
         theme: t.theme.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),

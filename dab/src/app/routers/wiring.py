@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from lib.config import get_settings
 from lib.sql_utils import fetch_one
+from routers.genie import info as genie_info
 
 router = APIRouter(prefix="/api/wiring", tags=["wiring"])
 
@@ -57,13 +58,15 @@ def status() -> WiringStatus:
         err = "DATABRICKS_WAREHOUSE_ID not set"
 
     any_rows = any(getattr(counts, f) > 0 for f in counts.model_fields)
+    # Resolve Genie space — env var wins, else self-discover by title.
+    g = genie_info()
     return WiringStatus(
         connected=any_rows and err is None,
         catalog=s.catalog,
         schema_name=s.schema_name,
         warehouse_id=s.warehouse_id,
         lakebase_instance=s.lakebase_instance,
-        genie_space_id=s.genie_space_id,
+        genie_space_id=g.space_id or s.genie_space_id,
         fmapi_endpoint=s.fmapi_endpoint,
         anchor_date=s.anchor_date,
         table_counts=counts,

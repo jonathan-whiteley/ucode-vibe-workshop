@@ -27,11 +27,13 @@ class SentimentDay(BaseModel):
 class Review(BaseModel):
     feedback_id: str
     date: str
+    store_id: str
     channel: str
     rating: int
     sentiment_label: str
     theme: str
     feedback_text: str
+    needs_reply: bool
     ai_drafted_reply: str | None = None
 
 
@@ -93,8 +95,8 @@ def reviews(limit: int = 5, needs_reply_only: bool = False) -> list[Review]:
     where = "WHERE needs_reply = TRUE" if needs_reply_only else ""
     rows = fetch_all(
         f"""
-        SELECT feedback_id, cast(date AS string) AS date, channel, rating,
-               sentiment_label, theme, feedback_text, ai_drafted_reply
+        SELECT feedback_id, cast(date AS string) AS date, store_id, channel, rating,
+               sentiment_label, theme, feedback_text, needs_reply, ai_drafted_reply
         FROM {cat}.{sch}.facts_customer_feedback
         {where}
         ORDER BY date DESC

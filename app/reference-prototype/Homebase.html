@@ -117,13 +117,41 @@ function App() {
     }, 750);
   };
 
+  const lakebaseWrite = async (path, body, okMsg) => {
+    try {
+      const r = await fetch(path, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (r.ok) {
+        pushToast(okMsg + ' · written to Lakebase');
+      } else {
+        pushToast(okMsg + ' · Lakebase write failed', 'warn');
+      }
+    } catch (e) {
+      pushToast(okMsg + ' · Lakebase unreachable', 'warn');
+    }
+  };
+
   const approveTimecard = (id) => { setLaborApproved(s => new Set(s).add(id)); pushToast('Timecard approved · written to Lakebase'); };
   const approveAllTimecards = () => { setLaborApproved(new Set(TIMECARDS.map(t => t.id))); pushToast('All timecards approved · written to Lakebase'); };
-  const releasePO = (id, total) => { setReordersReleased(s => new Set(s).add(id)); pushToast(`Purchase order released ($${total.toFixed(0)}) · written to Lakebase`); };
+  const releasePO = (id, total) => {
+    setReordersReleased(s => new Set(s).add(id));
+    lakebaseWrite('/api/writes/purchase-orders/release', { po_id: id, total_amount: total }, `Purchase order released ($${total.toFixed(0)})`);
+  };
   const scheduleService = (slot) => { setEquipmentScheduled({ slot }); pushToast(`Cooler #2 service booked · written to Lakebase`); };
   const sendCampaign = () => { setMembersSent(true); pushToast('Win-back sent to 184 members · written to Lakebase'); };
-  const replyReview = (id) => { setReviewsReplied(s => new Set(s).add(id)); pushToast('Reply sent to guest · written to Lakebase'); };
-  const approveSchedule = (summary) => { setScheduleApproved(true); pushToast(`Tomorrow's schedule approved · written to Lakebase`); };
+  const replyReview = (id, replyText) => {
+    setReviewsReplied(s => new Set(s).add(id));
+    lakebaseWrite('/api/writes/reviews/reply', { feedback_id: id, reply_text: replyText || '' }, 'Reply sent to guest');
+  };
+  const approveSchedule = (summary) => {
+    setScheduleApproved(true);
+    const date = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    lakebaseWrite('/api/writes/schedules/approve', { schedule_date: date, total_hours: summary && summary.hours }, "Tomorrow's schedule approved");
+  };
 
   const outstanding = {
     today: 0,
