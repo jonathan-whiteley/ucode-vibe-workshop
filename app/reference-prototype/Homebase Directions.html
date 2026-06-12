@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Homebase · home directions</title>
+<link rel="stylesheet" href="colors_and_type.css" />
+<style>
+  html, body, #root { height: 100%; margin: 0; }
+  body { background: #f0eee9; }
+  /* shared component styles (specific names, attached globally) */
+  .hb-primary { background: var(--db-lava-600); color: #fff; border: 0; padding: 9px 15px; border-radius: 8px; font: 500 13.5px/1 var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background var(--dur-base) var(--ease-out); }
+  .hb-primary:hover { background: var(--db-lava-700); }
+  .hb-ghost { background: #fff; color: var(--db-navy-800); border: 1px solid var(--db-gray-lines); padding: 9px 14px; border-radius: 8px; font: 500 13.5px/1 var(--font-sans); cursor: pointer; transition: background var(--dur-base) var(--ease-out); }
+  .hb-ghost:hover { background: var(--db-oat-medium); }
+  .hb-card { background: #fff; border: 1px solid var(--db-gray-lines); border-radius: 12px; }
+  .hb-chip-action { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--db-navy-700); padding: 9px 15px; border-radius: 999px; font: 500 13px/1 var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background var(--dur-base) var(--ease-out); }
+  .hb-chip-action:hover { background: rgba(255,255,255,0.16); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="homebase-directions.jsx"></script>
+<script type="text/babel" src="home-variants.jsx"></script>
+<script type="text/babel">
+const Frame = ({ children }) => (
+  <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden', fontFamily: 'var(--font-sans)' }}>
+    <Sidebar active="today" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <TopBar />
+      {children}
+    </div>
+  </div>
+);
+
+const App = () => (
+  <DesignCanvas>
+    <DCSection id="home" title="Homebase · Today screen" subtitle="Three directions for the morning home — same brand, same data, different lead. Pick one and I'll build it out into the full app.">
+      <DCArtboard id="a" label="A · The Morning Brief — action queue" width={1440} height={1024}>
+        <Frame><HomeBrief /></Frame>
+      </DCArtboard>
+      <DCArtboard id="b" label="B · Command Deck — KPIs + tiles" width={1440} height={1024}>
+        <Frame><HomeDeck /></Frame>
+      </DCArtboard>
+      <DCArtboard id="c" label="C · Genie-first — AI daily brief" width={1440} height={1024}>
+        <Frame><HomeGenie /></Frame>
+      </DCArtboard>
+    </DCSection>
+  </DesignCanvas>
+);
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 A 3-hour workshop format where each attendee uses **ucode** + **ai-dev-kit** to build a working Databricks app end-to-end: a Databricks App (AppKit) with a Genie space, an AI/BI dashboard, FMAPI-powered insights, and a packaged DAB with a multi-task Job — all routed through Databricks AI Gateway. No API keys.
 
-The reference build in this repo is **Operator Command Center**, a sample app that surfaces analytics across **Labor, Sales & Inventory, and Sentiment**. Drop in a different schema and the workshop format works for any domain.
+The reference build in this repo is **Homebase**, a store-operations console for a fictional QSR chain. It surfaces analytics and AI insights across **Labor, Inventory, and Guest Feedback**. Drop in a different schema and the workshop format works for any domain.
 
 ## Important links
 
