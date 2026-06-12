@@ -1,11 +1,12 @@
-"""Operator Command Center reference app (facilitator copy).
+"""Command Center reference app (facilitator copy).
 
-Serves the Homebase prototype as a static FastAPI app. The prototype is
-copied from `app/reference-prototype/` at deploy time so the bundle is
-self-contained.
+FastAPI entry that:
+- Serves the Homebase prototype as static files (default doc: Homebase.html)
+- Mounts `/api/wiring` so the UI can show a live connectivity banner
+- (Stub) Genie / labor / inventory / feedback routers will be added next pass
 
-This is intentionally minimal. Attendees build their own App during the
-workshop with FastAPI + AppKit components and wire to the workshop schema.
+Inspired by the lakehouse-market-e2e build's structure but scoped to the
+ucode workshop's 8-table schema and 3-pillar UI.
 """
 from __future__ import annotations
 
@@ -16,10 +17,19 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from .routers import wiring
+
 STATIC_DIR = Path(__file__).parent / "static"
 DEFAULT_DOC = os.environ.get("DEFAULT_DOC", "Homebase.html")
 
-app = FastAPI(title="Operator Command Center (reference)")
+app = FastAPI(title="Command Center (reference)")
+
+app.include_router(wiring.router)
+
+
+@app.get("/healthz")
+def healthz() -> dict[str, str]:
+    return {"status": "ok", "service": "command-center"}
 
 
 @app.get("/")
@@ -27,11 +37,5 @@ def root():
     return RedirectResponse(url=f"/{DEFAULT_DOC}")
 
 
-@app.get("/healthz")
-def healthz():
-    return {"ok": True}
-
-
-# Mount the prototype directory as static. `html=True` makes index.html
-# resolve automatically; we redirect to Homebase.html explicitly above.
+# Mount the prototype directory as static last so it doesn't shadow /api/*.
 app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")

@@ -9,3 +9,34 @@ command:
 env:
   - name: DEFAULT_DOC
     value: "Homebase.html"
+
+  # Warehouse for SQL reads (8 workshop tables). Resource binding injects the
+  # value at runtime from the `workshop_warehouse` resource in resources/app.yml.
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: workshop_warehouse
+
+  # Catalog + schema where the 8 workshop tables live.
+  - name: CC_CATALOG
+    value: "ioc_sandbox"
+  - name: CC_SCHEMA
+    value: "vibe_workshop"
+
+  # Anchor date so KPIs populate regardless of when the App is loaded.
+  - name: ANCHOR_DATE
+    value: "2026-06-22"
+
+  # Foundation Model API endpoint for `ai_query()` / Recommended Actions panel.
+  - name: FMAPI_ENDPOINT
+    value: "databricks-meta-llama-3-3-70b-instruct"
+
+  # Reference Genie space ID. Populated by the setup job. Until then this is
+  # empty; the UI banner shows "Genie: not yet wired". Set via:
+  #   databricks apps update command-center-dev --no-compute --json @app.json
+  # with this env override, then redeploy.
+  - name: GENIE_SPACE_ID
+    value: ""
+
+  # Lakebase instance name. PGHOST/PGUSER/PGPASSWORD are injected by the
+  # `lakebase` resource binding in resources/app.yml.
+  - name: LAKEBASE_INSTANCE
+    value: "command-center-lakebase"
