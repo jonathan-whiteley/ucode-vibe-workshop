@@ -10,6 +10,8 @@ authenticates to Lakebase via per-pool OAuth token (see lib/deps.py).
 """
 from __future__ import annotations
 
+from datetime import date, datetime
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
@@ -98,6 +100,10 @@ async def reply_review(body: ReplyReviewRequest, request: Request) -> WriteResul
 @router.post("/schedules/approve", response_model=WriteResult)
 async def approve_schedule(body: ApproveScheduleRequest, request: Request) -> WriteResult:
     actor = _actor(request)
+    try:
+        sched_date = datetime.strptime(body.schedule_date, "%Y-%m-%d").date()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"schedule_date must be YYYY-MM-DD: {e}")
     event_id = await _insert(
         """
         INSERT INTO schedules_approved
@@ -105,6 +111,6 @@ async def approve_schedule(body: ApproveScheduleRequest, request: Request) -> Wr
         VALUES ($1, $2, $3, $4)
         RETURNING event_id
         """,
-        (body.schedule_date, body.store_id, body.total_hours, actor),
+        (sched_date, body.store_id, body.total_hours, actor),
     )
     return WriteResult(event_id=event_id, actor=actor)

@@ -122,6 +122,10 @@ GRANTS = [
     "GRANT INSERT, SELECT ON purchase_orders_released TO PUBLIC",
     "GRANT INSERT, SELECT ON review_replies TO PUBLIC",
     "GRANT INSERT, SELECT ON schedules_approved TO PUBLIC",
+    # SERIAL columns are backed by sequences; INSERT requires USAGE on the seq.
+    "GRANT USAGE, SELECT ON SEQUENCE purchase_orders_released_event_id_seq TO PUBLIC",
+    "GRANT USAGE, SELECT ON SEQUENCE review_replies_event_id_seq TO PUBLIC",
+    "GRANT USAGE, SELECT ON SEQUENCE schedules_approved_event_id_seq TO PUBLIC",
 ]
 for stmt in GRANTS:
     try:

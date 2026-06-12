@@ -32,12 +32,12 @@ env:
   - name: FMAPI_ENDPOINT
     value: "databricks-meta-llama-3-3-70b-instruct"
 
-  # Reference Genie space ID. Populated by the setup job. Until then this is
-  # empty; the UI banner shows "Genie: not yet wired". Set via:
-  #   databricks apps update command-center-dev --no-compute --json @app.json
-  # with this env override, then redeploy.
+  # Reference Genie space ID. The App also self-discovers by title via
+  # /api/2.0/genie/spaces in routers/genie.py — but discovery requires the
+  # App's SP to have CAN_VIEW on the space, which isn't auto-granted. Setting
+  # this env var skips the discovery path. Update after the setup job runs.
   - name: GENIE_SPACE_ID
-    value: ""
+    value: "01f166b8267912879b89159f93eff4ed"
 
   # Lakebase instance name. PGHOST/PGUSER/PGPASSWORD are injected by the
   # `lakebase` resource binding in resources/app.yml.
