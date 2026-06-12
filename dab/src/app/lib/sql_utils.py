@@ -11,7 +11,7 @@ import re
 import time
 from typing import Any, Mapping
 
-from .deps import get_warehouse_client
+from lib.deps import get_warehouse_client
 
 _PARAM = re.compile(r":(\w+)")
 _TTL_SECONDS = int(os.getenv("QUERY_CACHE_TTL", "86400"))  # 24h: data only changes on redeploy

@@ -13,7 +13,7 @@ import asyncpg
 from databricks import sql as dbsql
 from databricks.sdk import WorkspaceClient
 
-from .config import get_settings
+from lib.config import get_settings
 
 
 @lru_cache(maxsize=1)

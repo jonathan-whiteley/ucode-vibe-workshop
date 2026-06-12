@@ -17,7 +17,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from .routers import wiring
+from routers import wiring
 
 STATIC_DIR = Path(__file__).parent / "static"
 DEFAULT_DOC = os.environ.get("DEFAULT_DOC", "Homebase.html")

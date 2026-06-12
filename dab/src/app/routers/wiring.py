@@ -10,8 +10,8 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from ..lib.config import get_settings
-from ..lib.sql_utils import fetch_one
+from lib.config import get_settings
+from lib.sql_utils import fetch_one
 
 router = APIRouter(prefix="/api/wiring", tags=["wiring"])
 

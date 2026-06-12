@@ -16,8 +16,11 @@ env:
     valueFrom: workshop_warehouse
 
   # Catalog + schema where the 8 workshop tables live.
+  # DAB doesn't substitute ${var.*} in app.yaml, so hardcoded for the dev
+  # target. For lce, override after deploy with:
+  #   databricks apps update command-center-lce --env CC_CATALOG=ioc_sandbox
   - name: CC_CATALOG
-    value: "ioc_sandbox"
+    value: "jdub_demo"
   - name: CC_SCHEMA
     value: "vibe_workshop"
 
