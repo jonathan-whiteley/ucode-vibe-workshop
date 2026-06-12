@@ -16,7 +16,7 @@ dbutils.widgets.text("lakebase_instance_name", "command-center-lakebase")
 dbutils.widgets.text("attendee_group", "users")
 
 # COMMAND ----------
-# MAGIC %pip install -q psycopg2-binary databricks-sdk
+# MAGIC %pip install -q psycopg2-binary "databricks-sdk>=0.40"
 
 # COMMAND ----------
 dbutils.library.restartPython()
@@ -26,17 +26,43 @@ dbutils.library.restartPython()
 LAKEBASE_NAME = dbutils.widgets.get("lakebase_instance_name")
 ATTENDEE_GROUP = dbutils.widgets.get("attendee_group")
 
-import os
 from databricks.sdk import WorkspaceClient
 import psycopg2
 
 w = WorkspaceClient()
 
-# Look up the Lakebase instance to get its connection details.
-# If the instance doesn't exist yet (DAB-created instance binding can fail
-# for non-admin deployers), surface a clear error message.
+# Lakebase API surface varies across SDK versions. Prefer w.database; fall back
+# to raw REST so this notebook keeps working as the SDK evolves.
+def _get_instance(name: str) -> dict:
+    if hasattr(w, "database"):
+        inst = w.database.get_database_instance(name=name)
+        return {"name": inst.name, "read_write_dns": inst.read_write_dns}
+    out = w.api_client.do("GET", f"/api/2.0/database/instances/{name}")
+    return {
+        "name": out.get("name", name),
+        "read_write_dns": out.get("read_write_dns") or out.get("readWriteDns"),
+    }
+
+
+def _mint_credential(name: str) -> str:
+    if hasattr(w, "database"):
+        cred = w.database.generate_database_credential(instance_names=[name])
+        token = getattr(cred, "token", None) or (cred if isinstance(cred, str) else None)
+        if token:
+            return token
+    out = w.api_client.do(
+        "POST",
+        "/api/2.0/database/credentials",
+        body={"instance_names": [name], "request_id": "workshop-setup"},
+    )
+    token = out.get("token") if isinstance(out, dict) else None
+    if not token:
+        raise RuntimeError(f"could not mint Lakebase credential: {out!r}")
+    return token
+
+
 try:
-    instance = w.database.get_database_instance(name=LAKEBASE_NAME)
+    inst = _get_instance(LAKEBASE_NAME)
 except Exception as e:
     raise RuntimeError(
         f"Lakebase instance '{LAKEBASE_NAME}' not found. "
@@ -44,23 +70,19 @@ except Exception as e:
         f"Create it manually in the workspace UI and rerun this task. Underlying error: {e}"
     )
 
-print(f"Lakebase instance: {instance.name}")
-print(f"  read_write_dns: {instance.read_write_dns}")
+print(f"Lakebase instance: {inst['name']}")
+print(f"  read_write_dns: {inst['read_write_dns']}")
 
-# Get a credential for the current user / job runner.
-cred = w.database.generate_database_credential(
-    instance_names=[LAKEBASE_NAME],
-    request_id="workshop-setup",
-)
+token = _mint_credential(LAKEBASE_NAME)
 
 # COMMAND ----------
 # Connect via psycopg2 and apply DDL + grants.
 conn = psycopg2.connect(
-    host=instance.read_write_dns,
+    host=inst["read_write_dns"],
     port=5432,
-    database="databricks_postgres",  # default Lakebase db
+    database="databricks_postgres",
     user=w.current_user.me().user_name,
-    password=cred.token,
+    password=token,
     sslmode="require",
 )
 conn.autocommit = True
@@ -70,7 +92,7 @@ DDL = [
     """CREATE TABLE IF NOT EXISTS purchase_orders_released (
          event_id SERIAL PRIMARY KEY,
          po_id TEXT NOT NULL,
-         store_id TEXT NOT NULL,
+         store_id TEXT,
          total_amount NUMERIC,
          released_by TEXT NOT NULL,
          released_at TIMESTAMP DEFAULT NOW()
@@ -78,7 +100,7 @@ DDL = [
     """CREATE TABLE IF NOT EXISTS review_replies (
          event_id SERIAL PRIMARY KEY,
          feedback_id TEXT NOT NULL,
-         store_id TEXT NOT NULL,
+         store_id TEXT,
          reply_text TEXT NOT NULL,
          replied_by TEXT NOT NULL,
          replied_at TIMESTAMP DEFAULT NOW()
@@ -86,7 +108,7 @@ DDL = [
     """CREATE TABLE IF NOT EXISTS schedules_approved (
          event_id SERIAL PRIMARY KEY,
          schedule_date DATE NOT NULL,
-         store_id TEXT NOT NULL,
+         store_id TEXT,
          total_hours NUMERIC,
          approved_by TEXT NOT NULL,
          approved_at TIMESTAMP DEFAULT NOW()
@@ -96,14 +118,10 @@ for stmt in DDL:
     cur.execute(stmt)
     print(f"applied: {stmt.split('(')[0].strip()}")
 
-# Grant INSERT/SELECT to the attendee group.
-# (In Lakebase, group access is mapped through the workspace SP layer.
-# For per-attendee write access, the recommended pattern is to use the App's
-# SP. See branding/lce/README.md or the data audit doc for details.)
 GRANTS = [
-    f"GRANT INSERT, SELECT ON purchase_orders_released TO PUBLIC",
-    f"GRANT INSERT, SELECT ON review_replies TO PUBLIC",
-    f"GRANT INSERT, SELECT ON schedules_approved TO PUBLIC",
+    "GRANT INSERT, SELECT ON purchase_orders_released TO PUBLIC",
+    "GRANT INSERT, SELECT ON review_replies TO PUBLIC",
+    "GRANT INSERT, SELECT ON schedules_approved TO PUBLIC",
 ]
 for stmt in GRANTS:
     try:

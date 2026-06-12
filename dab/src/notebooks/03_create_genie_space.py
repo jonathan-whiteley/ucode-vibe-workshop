@@ -2,119 +2,192 @@
 # MAGIC %md
 # MAGIC # Create reference Genie space over the workshop tables
 # MAGIC
-# MAGIC Creates a Genie space called "OCC reference: Operator Command Center"
-# MAGIC over all 8 workshop tables, bound to the chosen SQL warehouse, with a
-# MAGIC pre-baked set of sample questions and metric instructions.
+# MAGIC Creates a Genie space titled "Command Center reference" with the 8
+# MAGIC workshop tables and pre-baked sample questions / metric instructions /
+# MAGIC example SQLs. Idempotent: if a space with the same title already exists
+# MAGIC in this workspace, it's PATCHed in place.
 # MAGIC
-# MAGIC Idempotent: if a space with the same title exists in the current
-# MAGIC workspace, it's updated rather than duplicated.
+# MAGIC Lifted from the lakehouse-market 06_ensure_genie_space pattern
+# MAGIC (proto schema v2, sorted ids for stable diffs).
 
 # COMMAND ----------
 dbutils.widgets.text("catalog", "ioc_sandbox")
 dbutils.widgets.text("schema", "vibe_workshop")
 dbutils.widgets.text("warehouse_id", "")
+dbutils.widgets.text("space_id", "")
 
 # COMMAND ----------
-# MAGIC %pip install -q databricks-sdk
+# MAGIC %pip install -q --upgrade "databricks-sdk>=0.40"
 
 # COMMAND ----------
 dbutils.library.restartPython()
 
 # COMMAND ----------
-# Re-read widgets after the Python restart wipes the global namespace.
+# Re-read widgets after the Python restart.
 CATALOG = dbutils.widgets.get("catalog")
 SCHEMA = dbutils.widgets.get("schema")
 WAREHOUSE_ID = dbutils.widgets.get("warehouse_id")
+EXISTING_SPACE_ID = dbutils.widgets.get("space_id").strip()
 
 if not WAREHOUSE_ID:
     raise ValueError("warehouse_id task parameter is required")
 
-SPACE_TITLE = "Command Center reference"
+TITLE = "Command Center reference"
+DESCRIPTION = (
+    "Reference Genie space for the ucode Vibe Coding workshop. Answers questions "
+    "about labor, inventory, and guest feedback across 20 stores. Powers the "
+    "Ask Genie panel in the Command Center app."
+)
+INSTRUCTIONS = (
+    "You are answering questions for an operator using the Command Center app. "
+    "The dataset has 20 stores; if the user doesn't specify a store_id, default "
+    "to comparison-friendly answers across stores. Dayparts are: breakfast, "
+    "lunch, dinner, late. The three operational pillars are Labor (sales_daypart, "
+    "labor_daypart, employees), Inventory (sales_inventory_daily, purchase_orders, "
+    "items), and Guest Feedback (customer_feedback). Data ends 2026-06-22 — "
+    "anchor 'today' to MAX(date) in the relevant fact table, not current_date()."
+)
 
 import json
+from uuid import uuid4
+
 from databricks.sdk import WorkspaceClient
 
-w = WorkspaceClient()
-
 TABLES = [
-    "dims_stores",
-    "dims_items",
-    "dims_employees",
-    "facts_sales_daypart",
-    "facts_labor_daypart",
-    "facts_sales_inventory_daily",
-    "facts_purchase_orders",
-    "facts_customer_feedback",
+    f"{CATALOG}.{SCHEMA}.dims_stores",
+    f"{CATALOG}.{SCHEMA}.dims_items",
+    f"{CATALOG}.{SCHEMA}.dims_employees",
+    f"{CATALOG}.{SCHEMA}.facts_sales_daypart",
+    f"{CATALOG}.{SCHEMA}.facts_labor_daypart",
+    f"{CATALOG}.{SCHEMA}.facts_sales_inventory_daily",
+    f"{CATALOG}.{SCHEMA}.facts_purchase_orders",
+    f"{CATALOG}.{SCHEMA}.facts_customer_feedback",
 ]
 
 SAMPLE_QUESTIONS = [
     "What were yesterday's sales by daypart?",
     "Which 5 stores had the lowest labor % of sales last week?",
-    "Show me the days-of-cover for produce items at store S001 right now.",
+    "Show me the days-of-cover for items at store S001 right now.",
     "What's the trend in negative reviews over the last 30 days?",
-    "How many staged purchase orders are waiting to be released?",
+    "How many purchase orders are staged for release?",
     "Which themes drove the most negative feedback this week?",
 ]
 
-METRIC_INSTRUCTIONS = """
-Operator Command Center metric definitions:
+EXAMPLE_SQLS = [
+    {
+        "title": "Sales by daypart for the most recent date",
+        "sql": (
+            "WITH a AS (SELECT MAX(date) AS d FROM "
+            f"{CATALOG}.{SCHEMA}.facts_sales_daypart) "
+            "SELECT daypart, SUM(revenue) AS revenue "
+            f"FROM {CATALOG}.{SCHEMA}.facts_sales_daypart, a "
+            "WHERE date = a.d "
+            "GROUP BY daypart "
+            "ORDER BY MIN(hour_start)"
+        ),
+    },
+    {
+        "title": "Labor % of sales over the last 14 days",
+        "sql": (
+            "WITH s AS (SELECT date, SUM(revenue) AS rev FROM "
+            f"{CATALOG}.{SCHEMA}.facts_sales_daypart "
+            "WHERE date >= date_sub((SELECT MAX(date) FROM "
+            f"{CATALOG}.{SCHEMA}.facts_sales_daypart), 14) GROUP BY date), "
+            "l AS (SELECT date, SUM(labor_cost) AS cost FROM "
+            f"{CATALOG}.{SCHEMA}.facts_labor_daypart "
+            "WHERE date >= date_sub((SELECT MAX(date) FROM "
+            f"{CATALOG}.{SCHEMA}.facts_labor_daypart), 14) GROUP BY date) "
+            "SELECT s.date, ROUND(l.cost / NULLIF(s.rev, 0) * 100, 1) AS labor_pct "
+            "FROM s JOIN l USING (date) ORDER BY s.date"
+        ),
+    },
+    {
+        "title": "SKUs below reorder point right now",
+        "sql": (
+            "WITH latest AS (SELECT * FROM "
+            f"{CATALOG}.{SCHEMA}.facts_sales_inventory_daily "
+            "WHERE date = (SELECT MAX(date) FROM "
+            f"{CATALOG}.{SCHEMA}.facts_sales_inventory_daily)) "
+            "SELECT i.category, COUNT(*) AS below_par "
+            "FROM latest l "
+            f"JOIN {CATALOG}.{SCHEMA}.dims_items i USING (sku) "
+            "WHERE l.on_hand_eod < l.reorder_point "
+            "GROUP BY i.category ORDER BY below_par DESC"
+        ),
+    },
+    {
+        "title": "Top theme drivers of negative feedback, last 7 days",
+        "sql": (
+            "SELECT theme, COUNT(*) AS n "
+            f"FROM {CATALOG}.{SCHEMA}.facts_customer_feedback "
+            "WHERE sentiment_label = 'neg' "
+            "AND date >= date_sub((SELECT MAX(date) FROM "
+            f"{CATALOG}.{SCHEMA}.facts_customer_feedback), 7) "
+            "GROUP BY theme ORDER BY n DESC"
+        ),
+    },
+]
 
-1. Labor cost % of sales = SUM(facts_labor_daypart.labor_cost) / SUM(facts_sales_daypart.revenue), aggregated over the same date and store. Target band: 22%-26%.
-2. Days of cover = facts_sales_inventory_daily.on_hand_eod / rolling 7-day avg of units_sold per (store_id, sku).
-3. Sell-through rate = SUM(units_sold) / NULLIF(SUM(units_sold + on_hand_eod), 0) per (store_id, sku) over a window.
-4. Net sentiment score = (COUNT(*) FILTER (WHERE sentiment_label='pos') - COUNT(*) FILTER (WHERE sentiment_label='neg')) / COUNT(*) over a window in facts_customer_feedback.
 
-Joining conventions:
-- facts_sales_daypart and facts_labor_daypart share (date, store_id, daypart).
-- facts_sales_inventory_daily joins dims_items on sku and dims_stores on store_id.
-- facts_purchase_orders joins dims_items on sku.
-- facts_customer_feedback joins dims_stores on store_id; theme and sentiment_label are pre-staged.
-""".strip()
+def build_serialized_space() -> dict:
+    example_sqls = sorted(
+        [
+            {"id": uuid4().hex, "question": [e["title"]], "sql": [e["sql"]]}
+            for e in EXAMPLE_SQLS
+        ],
+        key=lambda x: x["id"],
+    )
+    sample_qs = sorted(
+        [{"id": uuid4().hex, "question": [q]} for q in SAMPLE_QUESTIONS],
+        key=lambda x: x["id"],
+    )
+    return {
+        "version": 2,
+        "data_sources": {
+            "tables": sorted(
+                [{"identifier": t} for t in TABLES],
+                key=lambda x: x["identifier"],
+            )
+        },
+        "instructions": {
+            "text_instructions": [{"id": uuid4().hex, "content": [INSTRUCTIONS]}],
+            "example_question_sqls": example_sqls,
+        },
+        "config": {"sample_questions": sample_qs},
+    }
+
 
 # COMMAND ----------
-# The Genie REST API is in /api/2.0/genie. The SDK exposes it as
-# `w.genie` on recent versions. If your SDK is older, fall back to raw HTTP.
-import requests
+w = WorkspaceClient()
 
-host = w.config.host.rstrip("/")
-token = w.config.token if w.config.token else None
-if token is None:
-    # In a job context, prefer the SDK's auth chain
-    headers = w.config.authenticate()
-else:
-    headers = {"Authorization": f"Bearer {token}"}
-headers["Content-Type"] = "application/json"
+# Look for an existing space with our title (idempotent).
+space_id = EXISTING_SPACE_ID
+if not space_id:
+    try:
+        listing = w.api_client.do("GET", "/api/2.0/genie/spaces") or {}
+        for sp in listing.get("spaces", []):
+            if sp.get("title") == TITLE:
+                space_id = sp.get("space_id", "")
+                break
+    except Exception as e:
+        print(f"WARNING: could not list existing spaces ({e}); will attempt create")
 
-# 1) See if a space with our title already exists.
-list_resp = requests.get(f"{host}/api/2.0/genie/spaces", headers=headers)
-list_resp.raise_for_status()
-existing = [s for s in list_resp.json().get("spaces", []) if s.get("title") == SPACE_TITLE]
-
-table_ids = [f"{CATALOG}.{SCHEMA}.{t}" for t in TABLES]
 payload = {
-    "title": SPACE_TITLE,
-    "description": "Reference Genie space for the ucode Vibe Coding workshop. Spans all 8 workshop tables.",
+    "title": TITLE,
+    "description": DESCRIPTION,
     "warehouse_id": WAREHOUSE_ID,
-    "table_identifiers": table_ids,
-    "instructions": METRIC_INSTRUCTIONS,
-    "sample_questions": SAMPLE_QUESTIONS,
+    "serialized_space": json.dumps(build_serialized_space()),
 }
 
-if existing:
-    space_id = existing[0]["space_id"]
-    print(f"updating existing Genie space {space_id}")
-    resp = requests.patch(f"{host}/api/2.0/genie/spaces/{space_id}", headers=headers, data=json.dumps(payload))
+if space_id:
+    print(f"Patching existing Genie space {space_id} ...")
+    resp = w.api_client.do("PATCH", f"/api/2.0/genie/spaces/{space_id}", body=payload)
+    print(f"Patched: {resp.get('title')} ({resp.get('space_id') or space_id})")
 else:
-    print("creating new Genie space")
-    resp = requests.post(f"{host}/api/2.0/genie/spaces", headers=headers, data=json.dumps(payload))
-
-if resp.status_code >= 400:
-    print(f"WARNING: Genie space API returned {resp.status_code}: {resp.text}")
-    print("If the Genie REST API surface differs in your workspace, create the space")
-    print("manually in the workspace UI using the tables, questions, and instructions")
-    print("printed above. The DAB will still deploy the App + Dashboard.")
-else:
-    result = resp.json()
-    space_id = result.get("space_id") or result.get("id")
-    print(f"Genie space ready: {space_id}")
-    print(f"URL: {host}/genie/spaces/{space_id}")
+    print("Creating new Genie space ...")
+    resp = w.api_client.do("POST", "/api/2.0/genie/spaces", body=payload)
+    new_id = resp.get("space_id")
+    print(f"Created: {resp.get('title')} ({new_id})")
+    print()
+    print(f"  URL: {w.config.host}/genie/rooms/{new_id}")
+    print(f"  The App's /api/genie endpoint discovers this by title — no env var change needed.")
