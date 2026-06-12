@@ -23,6 +23,10 @@ from decimal import Decimal
 
 from faker import Faker
 
+
+def parse_date(s: str) -> date:
+    return datetime.strptime(s, "%Y-%m-%d").date()
+
 REGIONS = ["West", "Central", "East"]
 ROLES = ["cook", "cashier", "lead", "manager"]
 ROLE_RATES = {"cook": 18.50, "cashier": 17.25, "lead": 21.00, "manager": 28.00}
@@ -159,10 +163,9 @@ def gen_items(n: int):
     return rows
 
 
-def gen_employees(fake: Faker, stores: list[dict]):
+def gen_employees(fake: Faker, stores: list[dict], end_date):
     rows = []
     eid = 1
-    today = date.today()
     for s in stores:
         # ~12 per store: 5 cooks, 4 cashiers, 2 leads, 1 manager
         plan = [("cook", 5), ("cashier", 4), ("lead", 2), ("manager", 1)]
@@ -174,7 +177,7 @@ def gen_employees(fake: Faker, stores: list[dict]):
                     "name": fake.name(),
                     "role": role,
                     "hourly_rate": dec(ROLE_RATES[role] + random.uniform(-1.0, 2.0)),
-                    "hire_date": today - timedelta(days=random.randint(30, 5*365)),
+                    "hire_date": end_date - timedelta(days=random.randint(30, 5*365)),
                 })
                 eid += 1
     return rows
@@ -184,11 +187,10 @@ def gen_employees(fake: Faker, stores: list[dict]):
 # Fact generators
 # ---------------------------------------------------------------------------
 
-def gen_sales_daypart(stores, days):
-    today = date.today()
+def gen_sales_daypart(stores, days, end_date):
     rows = []
     for d in range(days):
-        cur = today - timedelta(days=d)
+        cur = end_date - timedelta(days=d)
         weekday_factor = 1.15 if cur.weekday() in (4, 5) else 0.95 if cur.weekday() == 1 else 1.0
         # Each store has its own daily total around $14-18k
         for s in stores:
@@ -266,11 +268,10 @@ def gen_labor_daypart(sales_dp_rows):
     return rows
 
 
-def gen_sales_inventory(stores, items, days):
-    today = date.today()
+def gen_sales_inventory(stores, items, days, end_date):
     rows = []
     for d in range(days):
-        cur = today - timedelta(days=d)
+        cur = end_date - timedelta(days=d)
         for s in stores:
             for it in items:
                 units = max(0, int(random.gauss(20, 8)))
@@ -289,12 +290,11 @@ def gen_sales_inventory(stores, items, days):
     return rows
 
 
-def gen_purchase_orders(stores, items, inventory_rows, pos_per_store: int = 5):
+def gen_purchase_orders(stores, items, inventory_rows, end_date, pos_per_store: int = 5):
     """Generate staged POs by pulling the most recent low-stock items per store
     and grouping into a small number of POs per vendor category.
     """
-    today = date.today()
-    now = datetime.now()
+    now = datetime.combine(end_date, datetime.min.time()).replace(hour=13)
     # Items grouped by category
     items_by_sku = {it["sku"]: it for it in items}
     # Latest inventory snapshot per (store, sku)
@@ -370,8 +370,7 @@ def _drafted_reply(rating, theme, city):
     return f"Hi — we're sorry your {city} visit fell short. Reach out to our store manager and we'll make it right."
 
 
-def gen_feedback(fake: Faker, stores, n: int):
-    today = date.today()
+def gen_feedback(fake: Faker, stores, n: int, end_date):
     rows = []
     themes_list = list(THEME_WEIGHTS.keys())
     weights = list(THEME_WEIGHTS.values())
@@ -390,7 +389,7 @@ def gen_feedback(fake: Faker, stores, n: int):
         needs_reply = (rating <= 3 and random.random() < 0.6) or random.random() < 0.05
         rows.append({
             "feedback_id": f"FB-{i+1:06d}",
-            "date": today - timedelta(days=random.randint(0, 60)),
+            "date": end_date - timedelta(days=random.randint(0, 60)),
             "store_id": s["store_id"],
             "channel": ch,
             "rating": rating,
@@ -415,7 +414,9 @@ def main():
     ap.add_argument("--schema", default="vibe_workshop")
     ap.add_argument("--stores", type=int, default=20)
     ap.add_argument("--items", type=int, default=50)
-    ap.add_argument("--days", type=int, default=365)
+    ap.add_argument("--days", type=int, default=60)
+    ap.add_argument("--end-date", type=parse_date, default=date.today(),
+                    help="Latest date in the generated data, YYYY-MM-DD. Defaults to today.")
     ap.add_argument("--feedback", type=int, default=1000)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
@@ -429,26 +430,27 @@ def main():
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {args.schema}")
     spark.sql(f"USE SCHEMA {args.schema}")
 
+    print(f"generating with end_date={args.end_date}, days={args.days}")
     stores = gen_stores(fake, args.stores)
     items = gen_items(args.items)
-    employees = gen_employees(fake, stores)
+    employees = gen_employees(fake, stores, args.end_date)
     write_table(spark, stores, "dims_stores")
     write_table(spark, items, "dims_items")
     write_table(spark, employees, "dims_employees")
 
-    sales_dp = gen_sales_daypart(stores, args.days)
+    sales_dp = gen_sales_daypart(stores, args.days, args.end_date)
     write_table(spark, sales_dp, "facts_sales_daypart")
 
     labor_dp = gen_labor_daypart(sales_dp)
     write_table(spark, labor_dp, "facts_labor_daypart")
 
-    inventory = gen_sales_inventory(stores, items, args.days)
+    inventory = gen_sales_inventory(stores, items, args.days, args.end_date)
     write_table(spark, inventory, "facts_sales_inventory_daily")
 
-    pos = gen_purchase_orders(stores, items, inventory)
+    pos = gen_purchase_orders(stores, items, inventory, args.end_date)
     write_table(spark, pos, "facts_purchase_orders")
 
-    feedback = gen_feedback(fake, stores, args.feedback)
+    feedback = gen_feedback(fake, stores, args.feedback, args.end_date)
     write_table(spark, feedback, "facts_customer_feedback")
 
     print("done.")
