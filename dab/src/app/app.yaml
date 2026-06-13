@@ -6,40 +6,28 @@ command:
   - "--port"
   - "8000"
 
+# Most config (catalog, schema, genie_space_id) comes from a workspace file
+# written by the setup job at /Workspace/Shared/command-center/config.json.
+# The env vars below are bootstrap defaults for first-boot / fallback only.
 env:
   - name: DEFAULT_DOC
     value: "Homebase.html"
 
-  # Warehouse for SQL reads (8 workshop tables). Resource binding injects the
-  # value at runtime from the `workshop_warehouse` resource in resources/app.yml.
+  # Warehouse for SQL reads. Injected by the resource binding in resources/app.yml.
   - name: DATABRICKS_WAREHOUSE_ID
     valueFrom: workshop_warehouse
 
-  # Catalog + schema where the 8 workshop tables live.
-  # DAB doesn't substitute ${var.*} in app.yaml, so hardcoded for the dev
-  # target. For lce, override after deploy with:
-  #   databricks apps update command-center-lce --env CC_CATALOG=ioc_sandbox
+  # Bootstrap defaults — overridden once the setup job writes the workspace
+  # config file. Restart the App after `bundle run command_center_setup`.
   - name: CC_CATALOG
-    value: "jdub_demo"
+    value: "ioc_sandbox"
   - name: CC_SCHEMA
     value: "vibe_workshop"
-
-  # Anchor date so KPIs populate regardless of when the App is loaded.
   - name: ANCHOR_DATE
     value: "2026-06-22"
-
-  # Foundation Model API endpoint for `ai_query()` / Recommended Actions panel.
   - name: FMAPI_ENDPOINT
     value: "databricks-meta-llama-3-3-70b-instruct"
-
-  # Reference Genie space ID. The App also self-discovers by title via
-  # /api/2.0/genie/spaces in routers/genie.py — but discovery requires the
-  # App's SP to have CAN_VIEW on the space, which isn't auto-granted. Setting
-  # this env var skips the discovery path. Update after the setup job runs.
-  - name: GENIE_SPACE_ID
-    value: "01f166b8267912879b89159f93eff4ed"
-
-  # Lakebase instance name. PGHOST/PGUSER/PGPASSWORD are injected by the
-  # `lakebase` resource binding in resources/app.yml.
   - name: LAKEBASE_INSTANCE
     value: "command-center-lakebase"
+  - name: GENIE_SPACE_ID
+    value: ""

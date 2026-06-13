@@ -182,12 +182,44 @@ payload = {
 if space_id:
     print(f"Patching existing Genie space {space_id} ...")
     resp = w.api_client.do("PATCH", f"/api/2.0/genie/spaces/{space_id}", body=payload)
-    print(f"Patched: {resp.get('title')} ({resp.get('space_id') or space_id})")
+    final_space_id = resp.get("space_id") or space_id
+    print(f"Patched: {resp.get('title')} ({final_space_id})")
 else:
     print("Creating new Genie space ...")
     resp = w.api_client.do("POST", "/api/2.0/genie/spaces", body=payload)
-    new_id = resp.get("space_id")
-    print(f"Created: {resp.get('title')} ({new_id})")
-    print()
-    print(f"  URL: {w.config.host}/genie/rooms/{new_id}")
-    print(f"  The App's /api/genie endpoint discovers this by title — no env var change needed.")
+    final_space_id = resp.get("space_id")
+    print(f"Created: {resp.get('title')} ({final_space_id})")
+    print(f"  URL: {w.config.host}/genie/rooms/{final_space_id}")
+
+# Publish the resolved config to a known workspace file so the App can pick
+# it up at startup without any app.yaml hand-edit or env-var rewiring.
+import base64
+config_path = "/Workspace/Shared/command-center/config.json"
+config_payload = {
+    "catalog": CATALOG,
+    "schema": SCHEMA,
+    "warehouse_id": WAREHOUSE_ID,
+    "genie_space_id": final_space_id,
+}
+config_json = json.dumps(config_payload, indent=2)
+# Ensure parent dir exists. mkdirs is idempotent.
+try:
+    w.api_client.do("POST", "/api/2.0/workspace/mkdirs", body={"path": "/Workspace/Shared/command-center"})
+except Exception:
+    pass
+w.api_client.do(
+    "POST",
+    "/api/2.0/workspace/import",
+    body={
+        "path": config_path,
+        "format": "AUTO",
+        "content": base64.b64encode(config_json.encode()).decode(),
+        "overwrite": True,
+    },
+)
+print()
+print(f"  Wrote {config_path}:")
+print(config_json)
+print()
+print("  Restart the App (`databricks bundle run command_center_app -t <target>`)")
+print("  to pick up the new config.")

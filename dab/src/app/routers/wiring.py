@@ -37,6 +37,7 @@ class WiringStatus(BaseModel):
     genie_space_id: str
     fmapi_endpoint: str
     anchor_date: str
+    config_source: str
     table_counts: TableCounts
     error: str | None = None
 
@@ -69,6 +70,7 @@ def status() -> WiringStatus:
         genie_space_id=g.space_id or s.genie_space_id,
         fmapi_endpoint=s.fmapi_endpoint,
         anchor_date=s.anchor_date,
+        config_source=s.config_source,
         table_counts=counts,
         error=err,
     )

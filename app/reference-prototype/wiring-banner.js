@@ -79,6 +79,8 @@
         (hasGenie
           ? "Genie: " + status.genie_space_id.slice(0, 12) + "…"
           : "Genie: not yet wired") +
+        " · cfg: " +
+        (status.config_source || "?") +
         "</div>",
     ];
     el.innerHTML = lines.join("");
