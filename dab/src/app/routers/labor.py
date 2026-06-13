@@ -29,23 +29,23 @@ class TomorrowPlan(BaseModel):
 
 
 @router.get("/tomorrow", response_model=TomorrowPlan)
-def tomorrow() -> TomorrowPlan:
+def tomorrow(store_id: str = "S001") -> TomorrowPlan:
     s = get_settings()
     cat, sch = s.catalog, s.schema_name
     anchor = s.anchor_date
 
-    # Forecast: use latest available date in the table as "tomorrow"
+    # Forecast: use latest available date in the table as "tomorrow", scoped to a single store.
     sales_rows = fetch_all(
         f"""
         SELECT daypart, hour_start, hour_end,
                SUM(forecast_revenue) AS revenue,
                SUM(forecast_traffic) AS traffic
         FROM {cat}.{sch}.facts_sales_daypart
-        WHERE date = to_date(:anchor)
+        WHERE date = to_date(:anchor) AND store_id = :store_id
         GROUP BY daypart, hour_start, hour_end
         ORDER BY hour_start
         """,
-        {"anchor": anchor},
+        {"anchor": anchor, "store_id": store_id},
     )
 
     labor_rows = fetch_all(
@@ -54,10 +54,10 @@ def tomorrow() -> TomorrowPlan:
                SUM(forecast_headcount) AS hc,
                SUM(forecast_labor_cost) AS cost
         FROM {cat}.{sch}.facts_labor_daypart
-        WHERE date = to_date(:anchor)
+        WHERE date = to_date(:anchor) AND store_id = :store_id
         GROUP BY daypart, role
         """,
-        {"anchor": anchor},
+        {"anchor": anchor, "store_id": store_id},
     )
 
     by_dp: dict[str, dict[str, int]] = {}

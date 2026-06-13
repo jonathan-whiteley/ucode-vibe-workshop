@@ -36,14 +36,15 @@ class WatchedItem(BaseModel):
 
 
 @router.get("/health", response_model=StockHealth)
-def health() -> StockHealth:
+def health(store_id: str = "S001") -> StockHealth:
     s = get_settings()
     cat, sch = s.catalog, s.schema_name
     row = fetch_one(
         f"""
         WITH latest AS (
           SELECT * FROM {cat}.{sch}.facts_sales_inventory_daily
-          WHERE date = (SELECT MAX(date) FROM {cat}.{sch}.facts_sales_inventory_daily)
+          WHERE store_id = :store_id
+            AND date = (SELECT MAX(date) FROM {cat}.{sch}.facts_sales_inventory_daily)
         )
         SELECT
           COUNT(*) AS total_skus,
@@ -51,6 +52,7 @@ def health() -> StockHealth:
           SUM(CASE WHEN on_hand_eod < reorder_point THEN 1 ELSE 0 END) AS below_par
         FROM latest
         """,
+        {"store_id": store_id},
     ) or {}
     total = int(row.get("total_skus") or 0)
     at_par = int(row.get("at_par") or 0)
@@ -63,14 +65,15 @@ def health() -> StockHealth:
 
 
 @router.get("/by-category", response_model=list[CategoryFill])
-def by_category() -> list[CategoryFill]:
+def by_category(store_id: str = "S001") -> list[CategoryFill]:
     s = get_settings()
     cat, sch = s.catalog, s.schema_name
     rows = fetch_all(
         f"""
         WITH latest AS (
           SELECT * FROM {cat}.{sch}.facts_sales_inventory_daily
-          WHERE date = (SELECT MAX(date) FROM {cat}.{sch}.facts_sales_inventory_daily)
+          WHERE store_id = :store_id
+            AND date = (SELECT MAX(date) FROM {cat}.{sch}.facts_sales_inventory_daily)
         )
         SELECT i.category,
                COUNT(*) AS sku_count,
@@ -81,6 +84,7 @@ def by_category() -> list[CategoryFill]:
         GROUP BY i.category
         ORDER BY i.category
         """,
+        {"store_id": store_id},
     )
     out = []
     for r in rows:
@@ -98,19 +102,21 @@ def by_category() -> list[CategoryFill]:
 
 
 @router.get("/watched", response_model=list[WatchedItem])
-def watched(limit: int = 6) -> list[WatchedItem]:
+def watched(store_id: str = "S001", limit: int = 6) -> list[WatchedItem]:
     s = get_settings()
     cat, sch = s.catalog, s.schema_name
     rows = fetch_all(
         f"""
         WITH latest AS (
           SELECT * FROM {cat}.{sch}.facts_sales_inventory_daily
-          WHERE date = (SELECT MAX(date) FROM {cat}.{sch}.facts_sales_inventory_daily)
+          WHERE store_id = :store_id
+            AND date = (SELECT MAX(date) FROM {cat}.{sch}.facts_sales_inventory_daily)
         ),
         usage AS (
           SELECT sku, store_id, AVG(units_sold) AS avg_daily_units
           FROM {cat}.{sch}.facts_sales_inventory_daily
-          WHERE date >= date_sub((SELECT MAX(date) FROM {cat}.{sch}.facts_sales_inventory_daily), 7)
+          WHERE store_id = :store_id
+            AND date >= date_sub((SELECT MAX(date) FROM {cat}.{sch}.facts_sales_inventory_daily), 7)
           GROUP BY sku, store_id
         ),
         po_vendor AS (
@@ -130,5 +136,6 @@ def watched(limit: int = 6) -> list[WatchedItem]:
         ORDER BY days_of_cover ASC NULLS LAST
         LIMIT {limit}
         """,
+        {"store_id": store_id},
     )
     return [WatchedItem(**r) for r in rows]

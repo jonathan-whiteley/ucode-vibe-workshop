@@ -1,7 +1,8 @@
 """/api/today — headline KPIs the Today screen renders.
 
-Anchored to ANCHOR_DATE so KPIs populate regardless of when the App is
-loaded. All queries cached 24h via sql_utils.
+Anchored to ANCHOR_DATE and scoped to a single store (default S001) so the
+numbers map to the single-store Homebase design. Pass ?store_id=S0NN to
+switch stores. All queries cached 24h via sql_utils.
 """
 from __future__ import annotations
 
@@ -24,6 +25,7 @@ class KPI(BaseModel):
 
 class TodayKpis(BaseModel):
     anchor_date: str
+    store_id: str
     sales_yesterday: KPI
     forecast_today: KPI
     labor_pct: KPI
@@ -31,61 +33,58 @@ class TodayKpis(BaseModel):
     guests: KPI
 
 
-def _sparkline(anchor: str, days: int = 12) -> list[float]:
+def _sparkline(anchor: str, store_id: str, days: int = 12) -> list[float]:
     rows = fetch_all(
         f"""
         SELECT date, SUM(revenue) AS rev
         FROM jdub_demo.vibe_workshop.facts_sales_daypart
-        WHERE date BETWEEN date_sub(to_date(:anchor), {days}) AND date_sub(to_date(:anchor), 1)
+        WHERE store_id = :store_id
+          AND date BETWEEN date_sub(to_date(:anchor), {days}) AND date_sub(to_date(:anchor), 1)
         GROUP BY date
         ORDER BY date
         """,
-        {"anchor": anchor},
+        {"anchor": anchor, "store_id": store_id},
     )
     return [float(r["rev"] or 0) for r in rows]
 
 
 @router.get("/kpis", response_model=TodayKpis)
-def kpis() -> TodayKpis:
+def kpis(store_id: str = "S001") -> TodayKpis:
     s = get_settings()
     anchor = s.anchor_date
     cat, sch = s.catalog, s.schema_name
+    params = {"anchor": anchor, "store_id": store_id}
 
-    # Sales yesterday + week-ago for delta
     sales_row = fetch_one(
         f"""
         WITH a AS (SELECT to_date(:anchor) AS d)
         SELECT
-          (SELECT SUM(revenue) FROM {cat}.{sch}.facts_sales_daypart WHERE date = (SELECT d FROM a) - 1) AS yesterday,
-          (SELECT SUM(revenue) FROM {cat}.{sch}.facts_sales_daypart WHERE date = (SELECT d FROM a) - 8) AS last_week
+          (SELECT SUM(revenue) FROM {cat}.{sch}.facts_sales_daypart WHERE store_id = :store_id AND date = (SELECT d FROM a) - 1) AS yesterday,
+          (SELECT SUM(revenue) FROM {cat}.{sch}.facts_sales_daypart WHERE store_id = :store_id AND date = (SELECT d FROM a) - 8) AS last_week
         """,
-        {"anchor": anchor},
+        params,
     ) or {}
 
-    # Forecast today
     fcast_row = fetch_one(
         f"""
         SELECT SUM(forecast_revenue) AS fcast
         FROM {cat}.{sch}.facts_sales_daypart
-        WHERE date = to_date(:anchor)
+        WHERE store_id = :store_id AND date = to_date(:anchor)
         """,
-        {"anchor": anchor},
+        params,
     ) or {}
 
-    # Labor % of sales for anchor day
     labor_row = fetch_one(
         f"""
         WITH a AS (SELECT to_date(:anchor) AS d),
-        s AS (SELECT SUM(revenue) AS rev FROM {cat}.{sch}.facts_sales_daypart WHERE date = (SELECT d FROM a)),
-        l AS (SELECT SUM(labor_cost) AS cost FROM {cat}.{sch}.facts_labor_daypart WHERE date = (SELECT d FROM a))
-        SELECT
-          ROUND(l.cost / NULLIF(s.rev, 0) * 100, 1) AS labor_pct
+        s AS (SELECT SUM(revenue) AS rev FROM {cat}.{sch}.facts_sales_daypart WHERE store_id = :store_id AND date = (SELECT d FROM a)),
+        l AS (SELECT SUM(labor_cost) AS cost FROM {cat}.{sch}.facts_labor_daypart WHERE store_id = :store_id AND date = (SELECT d FROM a))
+        SELECT ROUND(l.cost / NULLIF(s.rev, 0) * 100, 1) AS labor_pct
         FROM s, l
         """,
-        {"anchor": anchor},
+        params,
     ) or {}
 
-    # Guest score: avg rating + NPS over the last 7 days
     guest_row = fetch_one(
         f"""
         SELECT
@@ -93,20 +92,19 @@ def kpis() -> TodayKpis:
           AVG(nps) AS avg_nps,
           COUNT(*) AS review_count
         FROM {cat}.{sch}.facts_customer_feedback
-        WHERE date >= date_sub(to_date(:anchor), 7)
+        WHERE store_id = :store_id AND date >= date_sub(to_date(:anchor), 7)
         """,
-        {"anchor": anchor},
+        params,
     ) or {}
 
-    # Guests today + last-week comparison
     traffic_row = fetch_one(
         f"""
         WITH a AS (SELECT to_date(:anchor) AS d)
         SELECT
-          (SELECT SUM(traffic) FROM {cat}.{sch}.facts_sales_daypart WHERE date = (SELECT d FROM a)) AS today,
-          (SELECT SUM(traffic) FROM {cat}.{sch}.facts_sales_daypart WHERE date = (SELECT d FROM a) - 7) AS last_week
+          (SELECT SUM(traffic) FROM {cat}.{sch}.facts_sales_daypart WHERE store_id = :store_id AND date = (SELECT d FROM a)) AS today,
+          (SELECT SUM(traffic) FROM {cat}.{sch}.facts_sales_daypart WHERE store_id = :store_id AND date = (SELECT d FROM a) - 7) AS last_week
         """,
-        {"anchor": anchor},
+        params,
     ) or {}
 
     def _delta_pct(cur, prev):
@@ -114,12 +112,13 @@ def kpis() -> TodayKpis:
             return None
         return round((float(cur) - float(prev)) / float(prev) * 100, 1)
 
-    spark = _sparkline(anchor)
+    spark = _sparkline(anchor, store_id)
     yest = sales_row.get("yesterday")
     last = sales_row.get("last_week")
 
     return TodayKpis(
         anchor_date=anchor,
+        store_id=store_id,
         sales_yesterday=KPI(
             label="Sales yesterday",
             value=float(yest) if yest is not None else None,
