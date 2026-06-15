@@ -1,7 +1,24 @@
 // Homebase app — mock data for all modules.
+
+// Today / tomorrow, computed at module load. Queries against the synthetic
+// data still anchor to ANCHOR_DATE (e.g. 2026-06-22) via the API, but the
+// UI shows the operator the real current date so the demo never looks stale.
+const _now = new Date();
+const _dow      = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][_now.getDay()];
+const _dowLong  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][_now.getDay()];
+const _mon      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][_now.getMonth()];
+const _monLong  = ['January','February','March','April','May','June','July','August','September','October','November','December'][_now.getMonth()];
+const _tomorrow = new Date(_now.getTime() + 86400000);
+const _tdowLong = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][_tomorrow.getDay()];
+const _tmonLong = ['January','February','March','April','May','June','July','August','September','October','November','December'][_tomorrow.getMonth()];
+
 const STORE = {
   name: 'Operator Command Center', num: '#0417', hood: 'Fillmore · San Francisco', hoodShort: 'Fillmore',
-  manager: 'Maya', date: 'Fri, May 30', clock: '7:42 AM',
+  manager: 'Maya',
+  date: `${_dow}, ${_mon} ${_now.getDate()}`,
+  dateLong: `${_dowLong}, ${_monLong} ${_now.getDate()}`,
+  tomorrowLong: `${_tdowLong}, ${_tmonLong} ${_tomorrow.getDate()}`,
+  clock: _now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
 };
 
 const KPIS = {

@@ -35,6 +35,27 @@ class WatchedItem(BaseModel):
     lead_time_days: int | None = None
 
 
+class POLine(BaseModel):
+    sku: str
+    item_name: str
+    on_hand_eod: int
+    reorder_point: int
+    qty: int
+    unit_cost: float
+    line_total: float
+    usage_trend: str | None = None
+
+
+class PurchaseOrder(BaseModel):
+    po_id: str
+    vendor_name: str
+    vendor_category: str
+    eta: str
+    status: str
+    total_amount: float
+    lines: list[POLine]
+
+
 @router.get("/health", response_model=StockHealth)
 def health(store_id: str = "S001") -> StockHealth:
     s = get_settings()
@@ -139,3 +160,49 @@ def watched(store_id: str = "S001", limit: int = 6) -> list[WatchedItem]:
         {"store_id": store_id},
     )
     return [WatchedItem(**r) for r in rows]
+
+
+@router.get("/purchase-orders", response_model=list[PurchaseOrder])
+def purchase_orders(store_id: str = "S001") -> list[PurchaseOrder]:
+    s = get_settings()
+    cat, sch = s.catalog, s.schema_name
+    rows = fetch_all(
+        f"""
+        SELECT po.po_id, po.vendor_name, po.vendor_category,
+               cast(po.eta AS string) AS eta, po.status,
+               po.sku, i.item_name,
+               po.on_hand_at_creation AS on_hand_eod, po.par AS reorder_point,
+               po.qty, po.unit_cost, po.line_total, po.usage_trend
+        FROM {cat}.{sch}.facts_purchase_orders po
+        JOIN {cat}.{sch}.dims_items i USING (sku)
+        WHERE po.store_id = :store_id
+        ORDER BY po.po_id, po.line_total DESC
+        """,
+        {"store_id": store_id},
+    )
+    by_po: dict[str, PurchaseOrder] = {}
+    for r in rows:
+        po_id = r["po_id"]
+        if po_id not in by_po:
+            by_po[po_id] = PurchaseOrder(
+                po_id=po_id,
+                vendor_name=r["vendor_name"] or "",
+                vendor_category=r["vendor_category"] or "",
+                eta=r["eta"] or "",
+                status=r["status"] or "",
+                total_amount=0.0,
+                lines=[],
+            )
+        po = by_po[po_id]
+        line = POLine(
+            sku=r["sku"], item_name=r["item_name"],
+            on_hand_eod=int(r["on_hand_eod"] or 0),
+            reorder_point=int(r["reorder_point"] or 0),
+            qty=int(r["qty"] or 0),
+            unit_cost=float(r["unit_cost"] or 0),
+            line_total=float(r["line_total"] or 0),
+            usage_trend=r.get("usage_trend"),
+        )
+        po.lines.append(line)
+        po.total_amount += line.line_total
+    return list(by_po.values())

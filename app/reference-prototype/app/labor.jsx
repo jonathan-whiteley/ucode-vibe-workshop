@@ -77,7 +77,7 @@ const PlannerHero = ({ totals, overrideCount, refreshing, onRefresh, lastRun, ba
           <div style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'4px 11px', background:'var(--db-lava-600)', borderRadius:999, fontSize:11, fontWeight:600, letterSpacing:'0.05em', textTransform:'uppercase', color:'#fff' }}>
             <Icon name="spark" size={12} color="#fff" /> Tomorrow's plan
           </div>
-          <h2 style={{ margin:'14px 0 0', fontSize:32, fontWeight:500, letterSpacing:'-0.02em', lineHeight:1.05, color:'#fff' }}>Saturday, May 31</h2>
+          <h2 style={{ margin:'14px 0 0', fontSize:32, fontWeight:500, letterSpacing:'-0.02em', lineHeight:1.05, color:'#fff' }}>{STORE.tomorrowLong}</h2>
           <p style={{ marginTop:10, fontSize:14, color:'var(--db-navy-300)', maxWidth:440, lineHeight:1.5 }}>
             Genie forecast tomorrow's traffic by day-part. Adjust anything you know that it doesn't, then approve — crew, cost and labor % update live.
           </p>
@@ -246,7 +246,7 @@ const ApproveModal = ({ open, onClose, onConfirm, totals }) => {
           <div style={{ width:42, height:42, borderRadius:11, background:'var(--db-lava-600)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icon name="check" size={22} color="#fff" stroke={2.4} /></div>
           <div>
             <div style={{ fontSize:17, fontWeight:600, letterSpacing:'-0.01em' }}>Lock in tomorrow's schedule</div>
-            <div style={{ fontSize:12, color:'var(--db-navy-400)', marginTop:2 }}>Saturday, May 31 · Lakehouse Market #0417</div>
+            <div style={{ fontSize:12, color:'var(--db-navy-400)', marginTop:2 }}>{STORE.tomorrowLong} · {STORE.num}</div>
           </div>
         </div>
         <div style={{ padding:24 }}>

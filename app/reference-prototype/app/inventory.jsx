@@ -132,16 +132,41 @@ const CategoryFill = ({ cats }) => (
 
 const InventoryView = () => {
   const { reordersReleased, releasePO } = useApp();
-  const openCount = REORDERS.filter(p => !reordersReleased.has(p.id)).length;
+  // Map API PO shape -> the prototype's POCard shape.
+  const reorders = livePos
+    ? livePos.map(po => ({
+        id: po.po_id,
+        vendor: po.vendor_name,
+        eta: po.eta ? po.eta.replace(/T.*$/, '') : 'TBD',
+        items: po.lines.map((l, i) => ({
+          id: `${po.po_id}-${i}`,
+          name: l.item_name,
+          sku: l.sku,
+          onHand: l.on_hand_eod,
+          par: l.reorder_point,
+          unit: 'unit',
+          cost: l.unit_cost,
+          qty: l.qty,
+          trend: l.usage_trend || 'steady',
+        })),
+      }))
+    : REORDERS;
+  const openCount = reorders.filter(p => !reordersReleased.has(p.id)).length;
 
-  // Live stock health + category fill from /api/inventory/*. Falls back to mocks.
+  // Live stock health + category fill + watched items + POs from /api/inventory/*.
   const [liveHealth, setLiveHealth] = useState(null);
   const [liveCats, setLiveCats] = useState(null);
+  const [liveWatched, setLiveWatched] = useState(null);
+  const [livePos, setLivePos] = useState(null);
   useEffect(() => {
     fetch('/api/inventory/health', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null).then(setLiveHealth).catch(() => {});
     fetch('/api/inventory/by-category', { credentials: 'include' })
       .then(r => r.ok ? r.json() : null).then(setLiveCats).catch(() => {});
+    fetch('/api/inventory/watched?limit=6', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveWatched).catch(() => {});
+    fetch('/api/inventory/purchase-orders', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLivePos).catch(() => {});
   }, []);
 
   const health = liveHealth
@@ -154,8 +179,22 @@ const InventoryView = () => {
                c.category === 'bread_cheese' ? 'var(--db-yellow-600)' :
                c.category === 'pantry' ? 'var(--db-blue-600)' : 'var(--db-maroon-600)' }))
     : STOCK_CATS;
+  // Map API watched rows -> the shape STOCK_WATCH expected.
+  const CAT_COLOR = { meat:'var(--db-lava-600)', veggie:'var(--db-green-600)', bread_cheese:'var(--db-yellow-600)', pantry:'var(--db-blue-600)', beverage:'var(--db-maroon-600)' };
+  const watched = liveWatched
+    ? liveWatched.map(w => ({
+        name: w.item_name,
+        cat: (w.category || '').replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()),
+        onHand: w.on_hand_eod,
+        par: w.reorder_point,
+        daysCover: w.days_of_cover ?? 0,
+        lead: w.lead_time_days ?? 2,
+        history: [w.reorder_point, Math.round(w.reorder_point*0.85), Math.round(w.reorder_point*0.7), Math.round(w.reorder_point*0.55), Math.round(w.reorder_point*0.4), Math.round(w.reorder_point*0.25), w.on_hand_eod],
+        color: CAT_COLOR[w.category] || 'var(--db-lava-600)',
+      }))
+    : STOCK_WATCH;
   const belowPar = health.below;
-  const atRisk = STOCK_WATCH.filter(i => i.daysCover <= i.lead).length;
+  const atRisk = watched.filter(i => i.daysCover <= i.lead).length;
   const valNow = STOCK_VALUE_TREND[STOCK_VALUE_TREND.length-1];
   return (
     <div style={{ flex:1, overflow:'auto', background:'var(--db-oat-light)' }}>
@@ -199,7 +238,7 @@ const InventoryView = () => {
             </div>
             <div style={{ fontSize:12, color:'var(--db-gray-text)', marginBottom:4 }}>On-hand ÷ daily usage. Bars short of the lead-time marker run out before resupply.</div>
             <div>
-              {STOCK_WATCH.map((it, i) => <CoverRow key={it.name} item={it} last={i===STOCK_WATCH.length-1} />)}
+              {watched.map((it, i) => <CoverRow key={it.name} item={it} last={i===watched.length-1} />)}
             </div>
           </Card>
           <Card pad={20}>
@@ -220,7 +259,7 @@ const InventoryView = () => {
           <span style={{ marginLeft:10, fontSize:12, fontWeight:500, color: openCount?'var(--db-blue-700)':'var(--db-green-800)', background: openCount?'var(--db-blue-300)':'var(--db-green-300)', padding:'2px 9px', borderRadius:999 }}>{openCount || 'All released'}</span>
         </div>
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-          {REORDERS.map(po => (
+          {reorders.map(po => (
             <POCard key={po.id} po={po} released={reordersReleased.has(po.id)} onRelease={(total) => releasePO(po.id, total)} />
           ))}
         </div>
