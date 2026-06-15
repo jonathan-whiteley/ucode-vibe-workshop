@@ -367,15 +367,26 @@ def gen_labor_daypart(sales_dp_rows):
 
 
 def gen_sales_inventory(stores, items, days, end_date):
+    """Generate per-SKU daily inventory + sales.
+
+    Daily usage is small (1-7 units of the SKU/day; a "unit" is the package
+    size — case of pepperoni, bag of mozzarella, etc). On-hand is correlated
+    with reorder_point so realistic days-of-cover lands in the 3-9 day range
+    when at par, 0.5-2 days when below par.
+    """
     rows = []
     for d in range(days):
         cur = end_date - timedelta(days=d)
         for s in stores:
             for it in items:
-                units = max(0, int(random.gauss(20, 8)))
+                units = max(0, int(random.gauss(4, 1.5)))
                 rev = round(units * float(it["retail_price"]), 2)
-                on_hand = max(0, random.randint(0, 80))
                 reorder = random.choice([10, 20, 30])
+                # 75% at-or-above par, 25% below par.
+                if random.random() < 0.75:
+                    on_hand = max(0, int(random.gauss(reorder * 1.3, reorder * 0.3)))
+                else:
+                    on_hand = max(0, int(random.gauss(reorder * 0.4, reorder * 0.2)))
                 rows.append({
                     "date": cur, "store_id": s["store_id"], "sku": it["sku"],
                     "units_sold": units, "revenue": dec(rev),
