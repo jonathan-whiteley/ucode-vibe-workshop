@@ -132,6 +132,23 @@ const CategoryFill = ({ cats }) => (
 
 const InventoryView = () => {
   const { reordersReleased, releasePO } = useApp();
+
+  // Live stock health + category fill + watched items + POs from /api/inventory/*.
+  const [liveHealth, setLiveHealth] = useState(null);
+  const [liveCats, setLiveCats] = useState(null);
+  const [liveWatched, setLiveWatched] = useState(null);
+  const [livePos, setLivePos] = useState(null);
+  useEffect(() => {
+    fetch('/api/inventory/health', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveHealth).catch(() => {});
+    fetch('/api/inventory/by-category', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveCats).catch(() => {});
+    fetch('/api/inventory/watched?limit=6', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLiveWatched).catch(() => {});
+    fetch('/api/inventory/purchase-orders', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null).then(setLivePos).catch(() => {});
+  }, []);
+
   // Map API PO shape -> the prototype's POCard shape.
   const reorders = livePos
     ? livePos.map(po => ({
@@ -152,22 +169,6 @@ const InventoryView = () => {
       }))
     : REORDERS;
   const openCount = reorders.filter(p => !reordersReleased.has(p.id)).length;
-
-  // Live stock health + category fill + watched items + POs from /api/inventory/*.
-  const [liveHealth, setLiveHealth] = useState(null);
-  const [liveCats, setLiveCats] = useState(null);
-  const [liveWatched, setLiveWatched] = useState(null);
-  const [livePos, setLivePos] = useState(null);
-  useEffect(() => {
-    fetch('/api/inventory/health', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null).then(setLiveHealth).catch(() => {});
-    fetch('/api/inventory/by-category', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null).then(setLiveCats).catch(() => {});
-    fetch('/api/inventory/watched?limit=6', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null).then(setLiveWatched).catch(() => {});
-    fetch('/api/inventory/purchase-orders', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null).then(setLivePos).catch(() => {});
-  }, []);
 
   const health = liveHealth
     ? { atPar: liveHealth.at_par, total: liveHealth.total_skus, below: liveHealth.below_par }

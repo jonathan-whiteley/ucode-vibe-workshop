@@ -36,16 +36,21 @@ const SentimentTimeline = ({ data }) => {
     const ro = new ResizeObserver(fit); ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const H = 248, padL = 30, padB = 26, padT = 10, padR = 8;
+  const H = 248, padL = 32, padB = 26, padT = 10, padR = 8;
   const plotW = w - padL - padR, plotH = H - padT - padB;
-  const max = 8, n = data.length;
+  const n = data.length;
+  // Pick a max that fits the data, rounded up to a nice tick boundary.
+  const peak = data.reduce((m,d) => Math.max(m, (d.pos||0) + (d.neu||0) + (d.neg||0)), 0);
+  const step = peak <= 8 ? 2 : peak <= 20 ? 5 : peak <= 50 ? 10 : peak <= 100 ? 20 : 50;
+  const max = Math.max(step, Math.ceil((peak * 1.1) / step) * step);
   const X = i => padL + (i/(n-1)) * plotW;
   const Y = v => padT + plotH - (v/max) * plotH;
   const base   = data.map((d,i) => [X(i), Y(0)]);
   const posTop = data.map((d,i) => [X(i), Y(d.pos)]);
   const neuTop = data.map((d,i) => [X(i), Y(d.pos + d.neu)]);
   const negTop = data.map((d,i) => [X(i), Y(d.pos + d.neu + d.neg)]);
-  const ticks = [0,2,4,6,8];
+  const ticks = [];
+  for (let t = 0; t <= max; t += step) ticks.push(t);
   const xIdx = data.map((_,i) => i).filter(i => i % 4 === 0);
 
   return (
