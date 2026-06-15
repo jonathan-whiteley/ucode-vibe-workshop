@@ -20,7 +20,7 @@
     el.style.cssText = [
       "position:fixed",
       "bottom:14px",
-      "left:14px",
+      "right:14px",
       "z-index:10000",
       "padding:10px 14px",
       "border-radius:8px",
