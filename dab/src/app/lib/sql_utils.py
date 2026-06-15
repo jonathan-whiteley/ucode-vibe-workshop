@@ -40,11 +40,24 @@ def _execute(rendered: str) -> list[dict[str, Any]]:
 
 
 def _execute_with_retry(rendered: str) -> list[dict[str, Any]]:
+    """Run the query; on any connection-shape error, drop the cached client
+    and retry exactly once. Covers SQL warehouse auto-stop, session expiry,
+    transient network blips (RequestError / Connection / Thrift)."""
     try:
         return _execute(rendered)
     except Exception as e:
         msg = str(e)
-        if "SessionHandle" in msg or ("Session" in msg and "closed" in msg) or "BAD_REQUEST" in msg:
+        retryable = (
+            "SessionHandle" in msg
+            or ("Session" in msg and "closed" in msg)
+            or "BAD_REQUEST" in msg
+            or "RequestError" in msg
+            or "Error during request" in msg
+            or "Connection" in msg
+            or "broken pipe" in msg.lower()
+            or "thrift" in msg.lower()
+        ) or isinstance(e, (ConnectionError, BrokenPipeError))
+        if retryable:
             get_warehouse_client.cache_clear()
             return _execute(rendered)
         raise
