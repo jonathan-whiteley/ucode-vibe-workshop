@@ -94,6 +94,8 @@ Read the summary. Make sure the agent has it open in context for the rest of the
 
 Paste the URL into your environment table as `<APP_URL>`.
 
+**Reference if you get stuck:** there's a fully-wired reference App in the workshop repo at `dab/src/app/`. The patterns in `lib/` (config, deps, sql_utils) and `routers/` are good cribs when wiring your own SQL + Lakebase + Genie integration.
+
 ### If it breaks
 
 - **"Permission denied" at runtime:** the app's SP didn't get its resources. Ask your agent to fix the resources block and redeploy.
@@ -138,6 +140,8 @@ Stretch. Refill coffee. Make sure your App URL still loads.
 > Add an "Ask Genie" tab that embeds Genie space `<GENIE_SPACE_ID>`.
 
 > Add a "Recommended Actions" sidebar visible on every tab. Use `ai_query()` with endpoint `<FMAPI_ENDPOINT>` to recommend the top 3 actions an operator should take this week, based on today's KPIs across the 3 pillars. Let users pick a store from a dropdown.
+
+(The reference App in `dab/src/app/routers/` shows how to wire SQL warehouse reads, Lakebase writes, and Genie discovery. Borrow patterns liberally.)
 
 > Apply LCE branding from `branding/lce/` in the workshop repo: logo at `branding/lce/logo.svg`, primary color `#FF671B`. Dark navbar. Page title "Command Center | LCE".
 

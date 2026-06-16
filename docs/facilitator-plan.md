@@ -53,9 +53,13 @@
 - [ ] Verify the reference dashboard renders in the workspace UI
 
 The bundle creates:
-- 8-table workshop dataset under `ioc_sandbox.vibe_workshop` (60 days, ending workshop date 2026-06-22)
-- Shared Lakebase instance `command-center-lakebase` with write-back tables for purchase orders, review replies, and schedule approvals
-- A reference Genie space, AI/BI dashboard, and App (your fallback if any attendee gets stuck)
+- **8-table workshop dataset** under `ioc_sandbox.vibe_workshop` (60 days, ending the workshop date so `current_date()`-style queries return real rows; item catalog + store locations driven by a `company` config in the generator, defaults to `lce`)
+- **Shared Lakebase instance** `command-center-lakebase` with write-back tables (`purchase_orders_released`, `review_replies`, `schedules_approved`) — DDL + sequence grants applied by the setup job
+- **Reference Genie space** "Command Center reference" — v2 spec with the 8 tables, 6 sample questions, 4 example SQLs, scoped instructions
+- **Reference AI/BI dashboard** with 4 widgets (labor %, sales-by-daypart, stock health, sentiment timeline)
+- **Reference App** "command-center-${target}" — a fully wired FastAPI build with 7 API routers (`/api/wiring`, `/api/today/kpis`, `/api/labor/tomorrow`, `/api/inventory/{health,by-category,watched,purchase-orders}`, `/api/feedback/{themes,sentiment-timeline,reviews}`, `/api/writes/*`, `/api/genie`). Live KPIs on every tab, Lakebase persistence for Release/Reply/Approve actions, a wiring banner that shows live counts + Genie ID, and the Homebase prototype as the UI. This is genuinely demo-able as the "end state" you can show at the start.
+
+The App self-configures per target via a JSON file the setup job writes to `/Workspace/Shared/command-center/config.json` (catalog, schema, warehouse_id, genie_space_id). The App reads it at startup, so the same `app.yaml` ships dev and prod without per-target hand-edits.
 
 ### T-3 days: confirm tooling
 
@@ -135,6 +139,8 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 
 **Critical:** Drill the `apps update --json` then `apps deploy` order. The ai-dev-kit skills handle this, but it's the #1 failure point if attendees try to shortcut.
 
+**Tip for attendees who want a head start:** the workshop repo's reference App at `dab/src/app/` is fully wired — they can study the `lib/` (config + warehouse + Lakebase pool) and `routers/` patterns when wiring their own.
+
 ---
 
 ### Module 3: Genie space (20 min, 1:40-2:00)
@@ -175,6 +181,12 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 
 > Redeploy.
 
+**Reference patterns:** the reference App in `dab/src/app/` already implements all of this. Attendees can borrow:
+- SQL warehouse access pattern: `lib/deps.get_warehouse_client()` using `databricks-sql-connector` + SDK OAuth
+- TTL-cached read helpers: `lib/sql_utils.fetch_all()` (24h cache survives warehouse cold-starts via a one-shot retry filter)
+- Lakebase write pattern: `lib/deps.get_lakebase_pool()` mints per-pool OAuth tokens (Lakebase doesn't support static passwords)
+- Per-target config: read `/Workspace/Shared/command-center/config.json` at startup (see `lib/config.py`) instead of hardcoding catalog/schema/genie_id in `app.yaml`
+
 **If running long:** cut per-tab embed; put all 3 tiles on an "Overview" tab. Genie + Recommended Actions are the high-impact pieces.
 
 ---
@@ -206,12 +218,15 @@ Prompts are intentionally terse. ai-dev-kit gives the agent the playbook for eac
 | Risk | Likelihood | Mitigation |
 |---|---|---|
 | AI Gateway not granted to all attendees | High | Test 1 week before; have facilitator's account as backup |
-| App deploy fails on first run (resources not registered) | High | Trust the ai-dev-kit skill to do `apps update --json` before `apps deploy`; the reference App in this repo shows the working pattern |
-| Synthetic data has bad joins / null columns | Low | Reference Genie/dashboard exercised the schema during T-1 week setup |
+| App deploy fails on first run (resources not registered) | High | Drill `apps update --json` → `apps deploy` order. The ai-dev-kit skill handles this; reference App in `dab/` shows the working pattern |
+| SQL warehouse 500s after idle / cold-start | Medium | Reference App's `sql_utils.py` retries on `RequestError` / session expiry. Attendees who write their own backend should mirror that pattern |
+| Synthetic data has bad joins / null columns | Low | Reference Genie/dashboard exercises the schema during T-1 week setup |
 | FMAPI endpoint slow / over quota | Medium | Pre-warm; have a backup endpoint identified |
 | Attendees skip pre-workshop setup | High | Send reminder 24h before; reserve 15 min at start for stragglers (cuts into Module 1) |
 | DAB module overruns | Low | The starter at `dab/` is fully working; attendees customize, not build from scratch |
-| Lakebase write-back fails (perm error) | Medium | The reference DAB grants the App SP `CAN_CONNECT_AND_CREATE` on the shared `command-center-lakebase`; if an attendee's App can't write, they can fall back to read-only demo |
+| Lakebase write-back fails (perm error / sequence grants) | Medium | The setup job grants `INSERT/SELECT` on tables AND `USAGE/SELECT` on the underlying SERIAL sequences (a `permission denied for sequence` gotcha hit us in dev). If an attendee's App can't write, they can fall back to read-only demo |
+| Genie space not visible to App's SP | Medium | App's `/api/genie` discovers by title; if discovery fails (SP needs CAN_VIEW on the space), the setup job writes the space ID into the workspace config JSON, App reads it from there |
+| SDK version drift in serverless notebook runtime | Low | The setup notebooks pin `databricks-sdk>=0.40` and fall back to raw REST (`/api/2.0/database/instances`, `/api/2.0/database/credentials`) when `w.database` isn't present |
 
 ---
 
