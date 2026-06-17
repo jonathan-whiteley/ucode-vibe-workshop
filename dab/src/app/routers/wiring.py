@@ -35,6 +35,7 @@ class WiringStatus(BaseModel):
     warehouse_id: str
     lakebase_instance: str
     genie_space_id: str
+    genie_space_title: str
     fmapi_endpoint: str
     anchor_date: str
     config_source: str
@@ -68,6 +69,7 @@ def status() -> WiringStatus:
         warehouse_id=s.warehouse_id,
         lakebase_instance=s.lakebase_instance,
         genie_space_id=g.space_id or s.genie_space_id,
+        genie_space_title=g.title,
         fmapi_endpoint=s.fmapi_endpoint,
         anchor_date=s.anchor_date,
         config_source=s.config_source,

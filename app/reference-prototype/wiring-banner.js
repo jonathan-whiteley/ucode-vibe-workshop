@@ -71,11 +71,9 @@
       "<div>" + fmt(rowsTotal) + " fact rows</div>",
       "<div style=\"margin-top:3px;font-family:'DM Mono',ui-monospace,monospace;font-size:10.5px;opacity:0.85\">" +
         (hasGenie
-          ? "Genie: " + status.genie_space_id.slice(0, 10) + "…"
+          ? "Genie: " + (status.genie_space_title || "(untitled)")
           : "Genie: pending") +
         "</div>",
-      "<div style=\"font-family:'DM Mono',ui-monospace,monospace;font-size:10.5px;opacity:0.85\">cfg: " +
-        (status.config_source || "?") + "</div>",
     ];
     el.innerHTML = lines.join("");
     document.body.appendChild(el);
