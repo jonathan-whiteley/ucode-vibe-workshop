@@ -13,7 +13,7 @@
 
 ---
 
-## Agenda
+## 📅 Agenda
 
 | Time | Module | Outcome |
 |---|---|---|
@@ -30,7 +30,7 @@
 
 ---
 
-## Your Workshop Environment
+## 🌐 Your Workshop Environment
 
 Fill these in from the facilitator's pre-workshop email. Keep this table handy: you'll paste these values into prompts all afternoon.
 
@@ -51,21 +51,19 @@ Fill these in from the facilitator's pre-workshop email. Keep this table handy: 
 
 ---
 
-## How to use this guide
+## 🧭 How to use this guide
 
-Every prompt below is a **code block** so you can hit the copy button and paste it straight into your coding agent. Placeholders (`<INITIALS>`, `<WAREHOUSE_NAME>`, etc.) come from the env table above — fill them in before pasting.
+Every prompt below is in a **code block** — hit the copy button, paste into your coding agent. Placeholders (`<INITIALS>`, `<WAREHOUSE_NAME>`, etc.) come from the env table above; fill them in before pasting.
 
-The prompts are short on purpose. Your agent has the **ai-dev-kit** skills loaded — it already knows how to build apps, Genie spaces, dashboards, and DABs on Databricks. Tell it *what*; the skills know *how*.
-
-If the agent asks clarifying questions, answer them. If it proposes something you don't like, redirect it. **Always read what it generates before running it.**
+Prompts are short on purpose. Your agent has **ai-dev-kit** skills loaded — it knows how to build apps, Genie spaces, dashboards, and DABs on Databricks. Tell it *what*; the skills know *how*. **Always read what it generates before running it.**
 
 ---
 
-## All prompts in one place
+## 📋 All prompts in one place
 
 Skip ahead to the section that matches what you're doing. Each prompt has the full context inline in its module below — these are the same prompts, listed here for quick paste.
 
-### Prereqs prompts (run these before the workshop)
+### 🎓 Prereqs prompts (run these before the workshop)
 
 **Shell setup** (copy into your terminal):
 
@@ -97,7 +95,7 @@ Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims
 
 If the smoke test returns 8 tables, you're ready. If anything above fails, ping the facilitator in the workshop Slack channel **before** the workshop starts.
 
-### Day-of prompts (run these in the workshop, in order)
+### 🚀 Day-of prompts (run these in the workshop, in order)
 
 Fill in `<INITIALS>`, `<WAREHOUSE_NAME>`, `<GENIE_SPACE_ID>`, `<DASHBOARD_ID>`, `<FMAPI_ENDPOINT>` from your env table.
 
@@ -159,7 +157,7 @@ Deploy the bundle to the dev target and run the job once. Then walk me through w
 
 ---
 
-## Step 0: Pre-Workshop Setup (30 min, do this before 1pm)
+## 🎓 Step 0: Pre-Workshop Setup (30 min, do this before 1pm)
 
 The prompts in "Prereqs prompts" above match this checklist. Tick each box as you go. If any step fails, ping the facilitator in the workshop Slack channel **before** the workshop starts.
 
@@ -174,7 +172,7 @@ The prompts in "Prereqs prompts" above match this checklist. Tick each box as yo
 
 ---
 
-## Module 1: Explore the Data (10 min)
+## 🔍 Module 1: Explore the Data (10 min)
 
 **Goal:** Ground the agent in the actual schema before building anything.
 
@@ -186,7 +184,7 @@ Read the summary. Make sure the agent has it open in context for the rest of the
 
 ---
 
-## Module 2: Scaffold the App Shell (20 min)
+## 🏗️ Module 2: Scaffold the App Shell (20 min)
 
 **Goal:** Get an empty Command Center deployed and visible. Doing this before Genie/dashboard means deployment issues surface early.
 
@@ -206,7 +204,7 @@ Paste the URL into your environment table as `<APP_URL>`.
 
 ---
 
-## Module 3: Genie Space (20 min)
+## 🧞 Module 3: Genie Space (20 min)
 
 **Goal:** Build a Genie space over all three pillars.
 
@@ -220,7 +218,7 @@ If the answers are off, ask your agent to refine the instructions.
 
 ---
 
-## Module 4: AI/BI Dashboard (20 min)
+## 📊 Module 4: AI/BI Dashboard (20 min)
 
 **Goal:** A Lakeview dashboard with widgets per pillar.
 
@@ -232,13 +230,13 @@ Create an AI/BI dashboard called "<INITIALS> Operator Insights" on warehouse <WA
 
 ---
 
-## Break (10 min)
+## ☕ Break (10 min)
 
 Stretch. Refill coffee. Make sure your App URL still loads.
 
 ---
 
-## Module 5: Integrate + AI Insights + LCE Branding (40 min)
+## 🔗 Module 5: Integrate + AI Insights + LCE Branding (40 min)
 
 **Goal:** Wire Genie + dashboard into the App, add a "Recommended Actions" FMAPI panel, apply LCE branding. Paste these one at a time.
 
@@ -266,7 +264,7 @@ Cut the dashboard-per-tab embed and put all the tiles on a single "Overview" tab
 
 ---
 
-## Module 6: DAB + Multi-Task Job + CI-CD (30 min)
+## 📦 Module 6: DAB + Multi-Task Job + CI-CD (30 min)
 
 **Goal:** Package everything as a Databricks Asset Bundle with a daily multi-task Job and dev/prod targets.
 
@@ -286,7 +284,7 @@ Deploy the bundle to the dev target and run the job once. Then walk me through w
 
 ---
 
-## Demo Round (15 min, 3:40-3:55)
+## 🎤 Demo Round (15 min, 3:40-3:55)
 
 Each attendee gets 1 minute:
 
@@ -296,7 +294,7 @@ Each attendee gets 1 minute:
 
 ---
 
-## Wrap (5 min, 3:55-4:00)
+## 🎁 Wrap (5 min, 3:55-4:00)
 
 - Workshop Slack channel: `<SLACK_CHANNEL>` for ongoing questions
 - Optional office hours 1 week after
@@ -304,7 +302,7 @@ Each attendee gets 1 minute:
 
 ---
 
-## Vibe Coding Tips
+## 💡 Vibe Coding Tips
 
 - **Read every diff.** Agents move fast and are sometimes confidently wrong. Catch SQL that drops tables, code that hardcodes credentials, prompts that bypass auth.
 - **Be specific about constraints when it matters** ("use the Databricks SQL connector, not pyodbc"); otherwise let the skills decide.
@@ -313,7 +311,7 @@ Each attendee gets 1 minute:
 
 ---
 
-## Reference Links
+## 🔖 Reference Links
 
 - [Workshop repo](https://github.com/jonathan-whiteley/ucode-vibe-workshop)
 - [databricks/ucode](https://github.com/databricks/ucode)
