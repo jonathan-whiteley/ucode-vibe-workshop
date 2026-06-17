@@ -76,3 +76,15 @@ targets:
     variables:
       catalog: "jdub_demo_aws"
       schema: "vibe_workshop"
+
+  azure:
+    # Clean-room test target in the Azure adb-984752964297111 workspace.
+    # Auth first: databricks auth login --host https://adb-984752964297111.11.azuredatabricks.net --profile azure
+    mode: development
+    presets:
+      name_prefix: ""
+    workspace:
+      profile: azure
+    variables:
+      catalog: "jdub_demo"
+      schema: "vibe_workshop"

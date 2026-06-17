@@ -123,44 +123,38 @@ dab/
         └── static/                 # Copy of app/reference-prototype (Homebase HTML/JSX/CSS) + wiring-banner.js
 ```
 
-## Common deploy gotchas (learned the hard way)
+## Common deploy gotchas
 
-1. **Warehouse name lookup fails.** `databricks.yml` declares
-   `warehouse_id` as a `lookup` by name (`Serverless Starter Warehouse`).
-   Not every workspace has a warehouse by that name. **Workaround:** pass
-   `--var warehouse_id=<id>` on every `bundle validate` / `bundle deploy`
-   invocation, or change the lookup name in `databricks.yml` to match the
-   target workspace.
+Two things almost everyone will hit on a fresh workspace:
 
-2. **Workspace App quota (300/workspace).** Deploys fail with
-   `Workspace ... has reached the maximum limit of 300 apps`. Delete
-   unused apps in the workspace before retrying (`databricks apps list` →
-   `databricks apps delete <name>`).
+1. **Warehouse name lookup fails.** `databricks.yml` declares `warehouse_id`
+   as a `lookup` by name (`Serverless Starter Warehouse`). That warehouse
+   doesn't exist in every workspace. **Always pass** `--var warehouse_id=<id>`
+   on `bundle validate` / `bundle deploy`. Find one with
+   `databricks --profile <p> warehouses list`.
 
-3. **App's per-table grants need tables to exist.** The `uc_securable`
-   resource bindings in `resources/app.yml` list 8 specific tables. DAB
-   validates each binding at deploy time. If the schema or any table is
-   missing, deploy fails with `SCHEMA_DOES_NOT_EXIST` or
-   `TABLE_OR_VIEW_NOT_FOUND`. **Fix:** run `scripts/bootstrap.py` once
-   before the first `bundle deploy` in a workspace (creates the schema
-   and 8 empty tables; setup job overwrites them with data).
+2. **Tables must exist before `bundle deploy`.** The App's `uc_securable`
+   resource bindings list 8 specific tables; DAB looks each one up at
+   deploy time. Without the bootstrap step, deploy fails with
+   `SCHEMA_DOES_NOT_EXIST` or `TABLE_OR_VIEW_NOT_FOUND`. **Always run**
+   `scripts/bootstrap.py` once before the first `bundle deploy` in a
+   workspace — it creates the schema and 8 empty tables. The setup job
+   then overwrites them with real data.
 
-4. **Lakebase write-back needs sequence grants.** Tables created with
-   `SERIAL` event_id columns also need `USAGE, SELECT` on the underlying
-   sequence — table-level grants alone aren't enough. The setup job
-   applies both.
+The bundle already handles the rest under the hood: Lakebase sequence
+grants for `SERIAL` columns, SDK fallback to raw REST when
+`w.database` isn't on the runtime, and Genie space ID propagation via
+`/Workspace/Shared/command-center/config.json` (so the App doesn't need
+ACL access to the Genie space directly).
 
-5. **Serverless notebook SDK lags `w.database`.** The Lakebase SDK
-   surface (`w.database.generate_database_credential`) isn't always
-   present even after pinning `databricks-sdk>=0.40`. The
-   `02_init_lakebase` notebook prefers `w.database` but falls back to
-   raw `/api/2.0/database/credentials`.
+Rarely-hit workspace-level limits worth knowing about:
 
-6. **Genie space discovery requires CAN_VIEW on the App's SP.** Newly
-   created spaces aren't visible to other SPs without an ACL grant. The
-   App reads the Genie space ID from
-   `/Workspace/Shared/command-center/config.json` (written by the setup
-   job) instead of discovery, which bypasses the visibility issue.
+- **App quota (300 apps / workspace).** If `bundle deploy` returns
+  `reached the maximum limit of 300 apps`, list and delete unused apps
+  in the target workspace.
+- **Lakebase instance quota.** Defaults are low (commonly 10). If
+  `database_instances` creation fails on quota, delete an unused
+  instance or have an admin raise the limit.
 
 ## Lakebase binding fallback
 
