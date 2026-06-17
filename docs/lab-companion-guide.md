@@ -72,7 +72,16 @@ Configure my MCP servers. Add Databricks SQL and the Managed Databricks MCPs.
 Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims_* and 5 facts_*).
 ```
 
-If the smoke test returns 8 tables, you're ready. If anything above fails, ping the facilitator in the workshop Teams channel **before** the workshop starts.
+**Checklist — tick each box as you go.** If anything fails, ping the facilitator in the workshop Teams channel **before** the workshop starts.
+
+- [ ] `uv` installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- [ ] `npm` installed (`brew install node` on macOS, or see nodejs.org)
+- [ ] `ucode` installed (`uv tool install git+https://github.com/databricks/ucode`)
+- [ ] Coding agent launched + OAuthed to the workspace (`ucode claude` or `ucode codex`)
+- [ ] `ucode status` shows the workspace + AI Gateway model endpoint
+- [ ] MCP servers added: Databricks SQL + Managed Databricks MCPs
+- [ ] ai-dev-kit skills loaded
+- [ ] Smoke test passed: agent lists 8 tables in `ioc_sandbox.vibe_workshop` (3 `dims_*`, 5 `facts_*`)
 
 ### 🚀 Day-of prompts (run these in the workshop, in order)
 
@@ -112,14 +121,14 @@ Confirm you've got it, then wait for my first module prompt.
 
 Now paste each module's prompt in order; the agent already knows your initials and your resource names.
 
-**Module 1 — Explore the data:**
+### 🔍 Module 1: Explore the data (1:10-1:20)
 
 ```text
 Module 1. Explore my workshop catalog. Show me schemas, row counts,
 and sample rows for all 8 tables. Save a summary as schema_summary.md.
 ```
 
-**Module 2 — App shell:**
+### 🏗️ Module 2: App shell (1:20-1:40)
 
 ```text
 Module 2. Scaffold my AppKit app with 3 tabs (Labor, Inventory,
@@ -132,7 +141,9 @@ Deploy with `apps update --json` first to register the resources,
 then `apps deploy`. Print the URL.
 ```
 
-**Module 3 — Genie space:**
+> 💡 **If deploy fails with "Permission denied" on UC tables:** the `apps update --json` step is mandatory before `apps deploy` on first deploy — the resource block in `app.yaml` alone isn't enough. Reference: [`dab/resources/app.yml`](https://github.com/jonathan-whiteley/ucode-vibe-workshop/blob/main/dab/resources/app.yml). Hard-refresh (Cmd+Shift+R) if the UI looks stale after redeploy — App static files are aggressively cached.
+
+### 🧞 Module 3: Genie space (1:40-2:00)
 
 ```text
 Module 3. Create my Genie space over all 8 workshop tables.
@@ -145,7 +156,7 @@ Test it with one question per pillar, then capture and remember
 the space ID.
 ```
 
-**Module 4 — AI/BI dashboard:**
+### 📊 Module 4: AI/BI dashboard (2:00-2:20)
 
 ```text
 Module 4. Create my AI/BI dashboard with 4 widgets:
@@ -157,7 +168,9 @@ Module 4. Create my AI/BI dashboard with 4 widgets:
 Publish it, then capture and remember the dashboard ID.
 ```
 
-**Module 5 — Integrate + AI + branding** (paste one at a time):
+### ☕ Break (2:20-2:30)
+
+### 🔗 Module 5: Integrate + AI + branding (2:30-3:10) — paste one at a time
 
 ```text
 Embed my dashboard into my app, one tile per pillar tab.
@@ -219,7 +232,9 @@ Apply LCE branding from branding/lce/ in the workshop repo:
 Redeploy my app.
 ```
 
-**Module 6 — DAB + Job + CI-CD** (paste one at a time):
+> 💡 **If running low on time:** drop the per-tab dashboard embed and put all 4 widgets on a single "Overview" tab. Genie + Recommended Actions are the higher-impact pieces.
+
+### 📦 Module 6: DAB + Job + CI-CD (3:10-3:40) — paste one at a time
 
 ```text
 Clone the workshop repo. Open dab/. Customize databricks.yml and
@@ -239,122 +254,9 @@ Deploy the bundle to the dev target and run the job once. Then walk
 me through what I'd change to deploy to prod when I'm ready.
 ```
 
----
+### 🎤 Demo round + wrap (3:40-4:00)
 
-## 🎓 Step 0: Pre-Workshop Setup (30 min, do this before 1pm)
-
-The prompts in "Prereqs prompts" above match this checklist. Tick each box as you go. If any step fails, ping the facilitator in the workshop Teams channel **before** the workshop starts.
-
-- [ ] `uv` installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- [ ] `npm` installed (`brew install node` on macOS, or see nodejs.org)
-- [ ] `ucode` installed (`uv tool install git+https://github.com/databricks/ucode`)
-- [ ] Coding agent launched + OAuthed to the workspace (`ucode claude` or `ucode codex`)
-- [ ] `ucode status` shows the workspace + AI Gateway model endpoint
-- [ ] MCP servers added: Databricks SQL + Managed Databricks MCPs
-- [ ] ai-dev-kit skills loaded
-- [ ] Smoke test passed: agent lists 8 tables in `ioc_sandbox.vibe_workshop` (3 `dims_*`, 5 `facts_*`)
-
----
-
-> 💡 **Prompts live in [📋 All prompts in one place](#-all-prompts-in-one-place).** The module sections below give the goal, what to capture, and what to do if it breaks. Make sure you've already pasted the **⭐ Session setup** prompt — every prompt assumes the agent knows your initials, warehouse, catalog, etc.
-
----
-
-## 🔍 Module 1: Explore the Data (10 min)
-
-**Goal:** Ground the agent in the actual schema before building anything.
-
-**Prompt:** see Module 1 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order).
-
-Read the summary. Make sure the agent has it open in context for the rest of the workshop.
-
----
-
-## 🏗️ Module 2: Scaffold the App Shell (20 min)
-
-**Goal:** Get an empty Command Center deployed and visible. Doing this before Genie/dashboard means deployment issues surface early.
-
-**Prompt:** see Module 2 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order).
-
-**Capture:** App URL → `<APP_URL>`.
-
-**Reference if you get stuck:** the fully-wired reference App at `dab/src/app/` is a good crib. The patterns in `lib/` (config, deps, sql_utils) and `routers/` show SQL + Lakebase + Genie integration end-to-end.
-
-### If it breaks
-
-- **"Permission denied" at runtime on UC tables:** the App's SP didn't get its resources. ai-dev-kit's pattern is `databricks apps update <name> --json '{"resources":[...]}' --no-compute` **first**, then `databricks bundle deploy` (or `apps deploy`). Skipping the `apps update` step is the #1 failure mode — the resource block in `app.yaml` alone isn't enough on first deploy. The reference App's `dab/resources/app.yml` shows the working bindings (warehouse `CAN_USE` + 8 tables `SELECT` + Lakebase).
-- **"SCHEMA_DOES_NOT_EXIST" or "TABLE_OR_VIEW_NOT_FOUND" at deploy:** the App resource block references tables that don't exist yet. You're using a shared schema (`ioc_sandbox.vibe_workshop`) so this shouldn't bite you — but if you build derived tables in your own sandbox and bind to them, create the tables first.
-- **Blank page or stale UI after redeploy:** ask the agent to run `databricks apps logs` on your app for backend errors. If logs look healthy, **hard-refresh the browser** (Cmd+Shift+R / Ctrl+Shift+R) — App static files are aggressively cached.
-
----
-
-## 🧞 Module 3: Genie Space (20 min)
-
-**Goal:** Build a Genie space over all three pillars.
-
-**Prompt:** see Module 3 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order).
-
-**Capture:** Your Genie space ID (the agent should remember it for later modules).
-
-If the answers are off, ask your agent to refine the instructions.
-
----
-
-## 📊 Module 4: AI/BI Dashboard (20 min)
-
-**Goal:** A Lakeview dashboard with widgets per pillar.
-
-**Prompt:** see Module 4 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order).
-
-**Capture:** Your dashboard ID (the agent should remember it for Module 5).
-
----
-
-## ☕ Break (10 min)
-
-Stretch. Refill coffee. Make sure your App URL still loads.
-
----
-
-## 🔗 Module 5: Integrate + AI Insights + LCE Branding (40 min)
-
-**Goal:** Wire Genie + dashboard into the App, add a "Recommended Actions" FMAPI panel, apply LCE branding.
-
-**Prompts:** see Module 5 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order) — 4 prompts, paste one at a time.
-
-The Ask Genie prompt has explicit wiring requirements (OBO auth, `user_api_scopes`, multi-turn) — read it carefully. The reference App in `dab/src/app/routers/` shows how to wire SQL warehouse reads, Lakebase writes, and Genie discovery; borrow patterns liberally.
-
-### If running low on time
-
-Cut the dashboard-per-tab embed and put all the tiles on a single "Overview" tab. Genie + Recommended Actions are the higher-impact pieces.
-
----
-
-## 📦 Module 6: DAB + Multi-Task Job + CI-CD (30 min)
-
-**Goal:** Package everything as a Databricks Asset Bundle with a daily multi-task Job and dev/prod targets.
-
-**Prompts:** see Module 6 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order) — 3 prompts, paste one at a time.
-
-The workshop repo already contains a working DAB at `dab/`. You'll fork or copy it and customize.
-
----
-
-## 🎤 Demo Round (15 min, 3:40-3:55)
-
-Each attendee gets 1 minute:
-
-1. Share your App URL
-2. Show one Genie question that worked
-3. Show one "Recommended Action" the FMAPI generated
-
----
-
-## 🎁 Wrap (5 min, 3:55-4:00)
-
-- Workshop Teams channel: `<TEAMS_CHANNEL>` for ongoing questions
-- Optional office hours 1 week after
-- Your App, DAB, and ucode setup are yours: keep iterating
+1 min per attendee: share your App URL, show one Genie question that worked, show one Recommended Action. Workshop Teams channel for ongoing questions; optional office hours 1 week after.
 
 ---
 
