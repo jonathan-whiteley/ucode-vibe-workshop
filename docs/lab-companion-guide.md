@@ -98,8 +98,9 @@ Paste the URL into your environment table as `<APP_URL>`.
 
 ### If it breaks
 
-- **"Permission denied" at runtime:** the app's SP didn't get its resources. Ask your agent to fix the resources block and redeploy.
-- **Blank page:** `databricks apps logs <INITIALS>-command-center`
+- **"Permission denied" at runtime on UC tables:** the App's SP didn't get its resources. ai-dev-kit's pattern is `databricks apps update <name> --json '{"resources":[...]}' --no-compute` **first**, then `databricks bundle deploy` (or `apps deploy`). Skipping the `apps update` step is the #1 failure mode — the resource block in `app.yaml` alone isn't enough on first deploy. The reference App's `dab/resources/app.yml` shows the working bindings (warehouse `CAN_USE` + 8 tables `SELECT` + Lakebase).
+- **"SCHEMA_DOES_NOT_EXIST" or "TABLE_OR_VIEW_NOT_FOUND" at deploy:** the App resource block references tables that don't exist yet. You're using a shared schema (`ioc_sandbox.vibe_workshop`) so this shouldn't bite you — but if you build derived tables in your own sandbox and bind to them, create the tables first.
+- **Blank page or stale UI after redeploy:** `databricks apps logs <INITIALS>-command-center` for backend errors. If logs look healthy, **hard-refresh the browser** (Cmd+Shift+R / Ctrl+Shift+R) — App static files are aggressively cached.
 
 ---
 
