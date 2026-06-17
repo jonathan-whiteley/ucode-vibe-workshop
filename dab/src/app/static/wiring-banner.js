@@ -17,20 +17,23 @@
     var connected = status && status.connected;
     var hasGenie = status && status.genie_space_id;
     var bg = connected ? "#0E538B" : "#BD2B26";
+    // Sits inside the sidebar (236px wide), pinned above the "Powered by
+    // Databricks" + profile section.
     el.style.cssText = [
       "position:fixed",
-      "bottom:14px",
-      "right:14px",
+      "left:10px",
+      "bottom:96px",
+      "width:216px",
       "z-index:10000",
-      "padding:10px 14px",
+      "padding:10px 12px",
       "border-radius:8px",
       "background:" + bg,
       "color:#fff",
       "font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif",
-      "font-size:12px",
-      "line-height:1.45",
-      "box-shadow:0 4px 12px rgba(11,32,38,0.18)",
-      "max-width:380px",
+      "font-size:11.5px",
+      "line-height:1.4",
+      "box-shadow:0 4px 12px rgba(11,32,38,0.4)",
+      "border:1px solid rgba(255,255,255,0.08)",
     ].join(";");
 
     if (!status) {
@@ -58,30 +61,21 @@
       (tc.facts_customer_feedback || 0);
 
     var lines = [
-      "<div style=\"font-weight:600;margin-bottom:4px\">Live: " +
-        status.catalog +
-        "." +
-        status.schema_name +
+      "<div style=\"font-weight:600;margin-bottom:3px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.7)\">Live wiring</div>",
+      "<div style=\"font-family:'DM Mono',ui-monospace,monospace;font-size:11px;margin-bottom:5px\">" +
+        status.catalog + "." + status.schema_name +
         "</div>",
       "<div>" +
-        fmt(tc.dims_stores) +
-        " stores · " +
-        fmt(tc.dims_items) +
-        " items · " +
-        fmt(tc.dims_employees) +
-        " employees</div>",
-      "<div>" +
-        fmt(rowsTotal) +
-        " fact rows · anchor " +
-        (status.anchor_date || "?") +
-        "</div>",
-      "<div style=\"margin-top:4px;font-family:'DM Mono',ui-monospace,monospace;font-size:11px;opacity:0.85\">" +
+        fmt(tc.dims_stores) + " stores · " +
+        fmt(tc.dims_items) + " items</div>",
+      "<div>" + fmt(rowsTotal) + " fact rows</div>",
+      "<div style=\"margin-top:3px;font-family:'DM Mono',ui-monospace,monospace;font-size:10.5px;opacity:0.85\">" +
         (hasGenie
-          ? "Genie: " + status.genie_space_id.slice(0, 12) + "…"
-          : "Genie: not yet wired") +
-        " · cfg: " +
-        (status.config_source || "?") +
+          ? "Genie: " + status.genie_space_id.slice(0, 10) + "…"
+          : "Genie: pending") +
         "</div>",
+      "<div style=\"font-family:'DM Mono',ui-monospace,monospace;font-size:10.5px;opacity:0.85\">cfg: " +
+        (status.config_source || "?") + "</div>",
     ];
     el.innerHTML = lines.join("");
     document.body.appendChild(el);
