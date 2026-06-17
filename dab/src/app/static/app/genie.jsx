@@ -47,9 +47,9 @@ function genieReply(q) {
 }
 
 const SUGGESTIONS = [
-  'Top 10 selling items yesterday by units sold',
-  'Average labor cost per daypart in the last 14 days',
-  'Average sentiment score per store in the last 30 days',
+  'Which items are at risk of running out tomorrow?',
+  'How did labor track against forecast this week?',
+  'What are guests complaining about most this month?',
 ];
 
 /* Render the LIGHT markdown Genie returns: **bold**, • bullets, blank-line paragraphs.

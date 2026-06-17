@@ -29,8 +29,8 @@ variables:
     lookup:
       warehouse: "serverless"
   fmapi_endpoint:
-    description: "Model endpoint used by both ai_query() in the app AND the AI Gateway route for the ucode coding agent. Same endpoint serves both for simplicity. Defaults to a GPT model since attendees run `ucode codex`."
-    default: "databricks-gpt-oss-120b"
+    description: "Model endpoint used by both ai_query() in the app AND the AI Gateway route for the ucode coding agent. Same endpoint serves both for simplicity."
+    default: "databricks-claude-sonnet-4-6"
   data_end_date:
     description: "Latest date in the synthetic data, YYYY-MM-DD"
     default: "2026-06-22"

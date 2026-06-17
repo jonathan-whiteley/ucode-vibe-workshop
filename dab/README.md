@@ -80,7 +80,7 @@ Override at deploy time with `--var <key>=<value>`:
 | `catalog` | `ioc_sandbox` (lce) / `jdub_demo` (dev) | UC catalog where the 8 workshop tables land |
 | `schema` | `vibe_workshop` | UC schema |
 | `warehouse_id` | looked up by name | Override with the warehouse ID if the lookup name doesn't match |
-| `fmapi_endpoint` | `databricks-meta-llama-3-3-70b-instruct` | Foundation Model API endpoint for `ai_query()` calls |
+| `fmapi_endpoint` | `databricks-claude-sonnet-4-6` | Foundation Model API endpoint for `ai_query()` calls |
 | `data_end_date` | `2026-06-22` | Latest date in the synthetic data; anchors `current_date()`-style queries |
 | `attendee_group` | `users` | Workspace group that gets SELECT on tables + CAN_USE on the App |
 | `company` | `lce` | Brand config for synthetic data (lce / qsr_mexican); see `data/generate_data.py` |

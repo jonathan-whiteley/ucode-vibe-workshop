@@ -97,7 +97,7 @@ these values and remember them throughout this conversation:
   Workspace:    adb-30827331698809.9.azuredatabricks.net
   Catalog:      ioc_sandbox.vibe_workshop
   Warehouse:    serverless
-  Model endpt:  databricks-gpt-oss-120b
+  Model endpt:  databricks-claude-sonnet-4-6
                   (use for BOTH ai_query() AND the AI Gateway route)
   Lakebase:     command-center-lakebase
 
@@ -271,8 +271,8 @@ Pre-filled values used throughout the workshop. The **⭐ Session setup** prompt
 | Shared data catalog.schema | `ioc_sandbox.vibe_workshop` |
 | Shared Lakebase instance | `command-center-lakebase` |
 | SQL warehouse name | `serverless` |
-| AI Gateway model endpoint (for `ucode codex`) | `databricks-gpt-oss-120b` |
-| FMAPI endpoint (for `ai_query()`) | `databricks-gpt-oss-120b` (same as above) |
+| AI Gateway model endpoint (for `ucode codex`) | `databricks-claude-sonnet-4-6` |
+| FMAPI endpoint (for `ai_query()`) | `databricks-claude-sonnet-4-6` (same as above) |
 | LCE branding folder (in repo) | `branding/lce/` |
 | **Captured during workshop:** | |
 | Your Genie space ID | `<GENIE_SPACE_ID>` |

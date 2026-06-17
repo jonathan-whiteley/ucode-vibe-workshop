@@ -38,7 +38,7 @@ class Settings(BaseModel):
     lakebase_password: str = ""
     lakebase_instance: str = ""
     genie_space_id: str = ""
-    fmapi_endpoint: str = "databricks-meta-llama-3-3-70b-instruct"
+    fmapi_endpoint: str = "databricks-claude-sonnet-4-6"
     anchor_date: str = "2026-06-22"
     config_source: str = "env"  # "env" or "workspace-file"
 
@@ -78,7 +78,7 @@ def get_settings() -> Settings:
         lakebase_password=os.getenv("LAKEBASE_PASSWORD") or os.getenv("PGPASSWORD", ""),
         lakebase_instance=ws_cfg.get("lakebase_instance") or os.getenv("LAKEBASE_INSTANCE", "command-center-lakebase"),
         genie_space_id=ws_cfg.get("genie_space_id") or os.getenv("GENIE_SPACE_ID", ""),
-        fmapi_endpoint=ws_cfg.get("fmapi_endpoint") or os.getenv("FMAPI_ENDPOINT", "databricks-meta-llama-3-3-70b-instruct"),
+        fmapi_endpoint=ws_cfg.get("fmapi_endpoint") or os.getenv("FMAPI_ENDPOINT", "databricks-claude-sonnet-4-6"),
         anchor_date=ws_cfg.get("anchor_date") or os.getenv("ANCHOR_DATE", "2026-06-22"),
         config_source=source,
     )

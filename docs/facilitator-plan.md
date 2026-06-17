@@ -44,10 +44,10 @@
 |---|---|
 | **Databricks Apps**| Hosts the Command Center App |
 | **Genie spaces**(Previews) | Natural-language Q&A pillar |
-| **Foundation Model API + AI Gateway** → `databricks-gpt-oss-120b` | Single GPT endpoint serves both `ai_query()` in the app AND the AI Gateway route for `ucode codex`. Confirm the endpoint exists and the attendee group has `CAN_USE`. |
+| **Foundation Model API + AI Gateway** → `databricks-claude-sonnet-4-6` | Single endpoint serves both `ai_query()` in the app AND the AI Gateway route for `ucode codex`. Confirm the endpoint exists and the attendee group has `CAN_USE`. |
 | **Lakebase**(Postgres preview) | Write-back persistence (release POs, replies, schedule approvals) |
 
->**Why one model endpoint:** the attendee guide pre-fills both `<MODEL_ENDPOINT>` (AI Gateway → `ucode codex`) and `<FMAPI_ENDPOINT>` (`ai_query()` in the app) as `databricks-gpt-oss-120b` so attendees only see one name. If LCE prefers a different GPT route, override with `--var fmapi_endpoint=<name>` at deploy time and update the env table in `docs/lab-companion-guide.md` to match.
+>**Why one model endpoint:** the attendee guide pre-fills both `<MODEL_ENDPOINT>` (AI Gateway → `ucode codex`) and `<FMAPI_ENDPOINT>` (`ai_query()` in the app) as `databricks-claude-sonnet-4-6` so attendees only see one name. If LCE prefers a different route, override with `--var fmapi_endpoint=<name>` at deploy time and update the env table in `docs/lab-companion-guide.md` to match.
 
 #### Who needs what permission
 
