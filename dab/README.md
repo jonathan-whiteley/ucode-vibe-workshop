@@ -184,9 +184,25 @@ databricks bundle run command_center_app -t lce
 
 ## Tearing it down
 
+For a full post-workshop sweep (Lakebase + UC schema + attendee-built Apps / Genie spaces / dashboards), run the cleanup script — it covers what `bundle destroy` doesn't:
+
 ```bash
-databricks bundle destroy -t dev --auto-approve
-databricks bundle destroy -t lce --auto-approve  # admin only
+# DRY RUN — see what matches the workshop's naming patterns
+python3 scripts/cleanup.py --profile lce --catalog ioc_sandbox
+
+# APPLY — delete everything matching
+python3 scripts/cleanup.py --profile lce --catalog ioc_sandbox \
+    --warehouse-id <id> --apply
+
+# Then drop the bundle-owned facilitator resources
+databricks bundle destroy -t lce --auto-approve
 ```
 
-This drops the App, dashboard, and job. The Lakebase instance and Unity Catalog tables are NOT dropped by `bundle destroy` — clean those up manually if you need a fresh slate.
+Flags you may want:
+- `--keep-reference` — skip the facilitator's reference App / Genie space / dashboard
+- `--skip-lakebase` — leave the Postgres instance intact (it bills hourly, so usually you do want to delete it)
+- `--skip-schema` — leave the UC tables intact
+
+See [`scripts/cleanup.py`](scripts/cleanup.py) for the full set. The script runs `--dry-run` by default — nothing is deleted without `--apply`.
+
+`bundle destroy` alone only drops the App, dashboard, and job — not the Lakebase instance, not the UC tables, not attendee-built assets.

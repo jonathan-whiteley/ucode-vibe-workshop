@@ -17,7 +17,10 @@ resources:
           3. create_genie_space  - reference Genie space over the tables
       tags:
         purpose: workshop
+        workshop: ucode-vibe-command-center
         owner: facilitator
+        environment: ${bundle.target}
+        cost_center: fe-workshop
 
       parameters:
         - name: catalog

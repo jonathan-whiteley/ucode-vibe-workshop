@@ -218,6 +218,83 @@ The shared workshop schema `ioc_sandbox.vibe_workshop` and the shared `command-c
 
 ---
 
+## Cost Controls & Governance
+
+A 3-hour workshop with ~10 attendees typically costs **$50-150 total** across serverless SQL, Apps, Lakebase, and Claude FMAPI calls. Cost overruns come from **assets left running after the workshop**, not from the workshop itself. Three guardrails:
+
+### 1. Tags (cost attribution + cleanup discovery)
+
+The bundle already tags the setup job with:
+
+```yaml
+tags:
+  purpose: workshop
+  workshop: ucode-vibe-command-center
+  owner: facilitator
+  environment: ${bundle.target}
+  cost_center: fe-workshop
+```
+
+For LCE-managed budgets, swap `cost_center: fe-workshop` for whatever code LCE uses. These tags flow into `system.billing.usage` so finance can attribute DBUs to the workshop. The cleanup script (below) uses the `workshop` tag + naming patterns to find what to delete.
+
+### 2. Budget policy (alert at $100, hard cap at $300)
+
+Set up a workspace-level budget policy before the workshop. Quick version:
+
+```bash
+databricks --profile lce api post /api/2.1/budget-policies --json '{
+  "policy_name": "ucode-vibe-workshop",
+  "custom_tags": [{"key": "workshop", "value": "ucode-vibe-command-center"}],
+  "limit_config": {"max_dbu": 300, "alert_thresholds_dbu": [100, 200]}
+}'
+```
+
+Or set this in the Account Console UI under **Settings → Compute → Budget policies**. Assign the policy to the attendee group so their workspace activity rolls up to the same cap.
+
+### 3. Auto-stop verification
+
+- **SQL warehouse `serverless`:** confirm auto-stop ≤ 10 min idle (default for serverless). The bundle uses serverless notebooks so no cluster auto-stop to manage.
+- **Databricks Apps:** auto-suspend after ~30 min of no traffic (built-in). Each attendee's app is small (~$0.04/hr); even forgotten ones cost cents.
+- **Lakebase:** **no auto-stop** — the instance bills hourly until deleted. This is the highest cleanup priority.
+- **Claude `ai_query()`:** AI Gateway should have rate limits set on the endpoint (Account Console → Serving → endpoint → Rate limits). 10 calls/min per user is a sane workshop cap.
+
+### 4. Apps quota
+
+If LCE has the default 300-apps-per-workspace quota, 10 attendees + facilitator references fits comfortably. Verify by listing existing apps before the workshop: `databricks --profile lce apps list | jq '.apps | length'`.
+
+---
+
+## Cleanup
+
+Run the cleanup script 24-48h after the workshop ends. Without this, the Lakebase instance keeps billing and attendee-created Apps/Genie spaces clutter the workspace.
+
+```bash
+# 1. DRY RUN — see what would be deleted
+python3 dab/scripts/cleanup.py --profile lce --catalog ioc_sandbox
+
+# 2. APPLY — actually delete everything matching the workshop patterns
+python3 dab/scripts/cleanup.py --profile lce --catalog ioc_sandbox \
+    --warehouse-id <id> --apply
+
+# 3. (optional) Drop the bundle-owned facilitator resources too
+databricks bundle destroy -t lce --auto-approve
+```
+
+The script sweeps and deletes:
+
+| Item | Match | Notes |
+|---|---|---|
+| Apps | `*-command-center` / `command-center-*` | Skips reference build with `--keep-reference` |
+| Genie spaces | `* Command Center` / `Command Center reference` | Skips `Command Center reference` with `--keep-reference` |
+| Dashboards | `* Operator Insights` / `command_center_*` | Skips `command_center_dash` with `--keep-reference` |
+| Lakebase instance | `command-center-lakebase` exact match | Skip with `--skip-lakebase` |
+| UC schema | `<catalog>.vibe_workshop` (CASCADE) | Drops all 8 tables; needs `--warehouse-id`. Skip with `--skip-schema` |
+| Workspace config | `/Workspace/Shared/command-center/` | Removes the per-target config JSON |
+
+It will **not** touch the catalog itself, or anything outside the workshop's naming patterns. See [`dab/scripts/cleanup.py`](../dab/scripts/cleanup.py) for the full flag set.
+
+---
+
 ## Companion Documents
 
 | | |
