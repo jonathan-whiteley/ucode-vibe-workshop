@@ -106,15 +106,45 @@ function App() {
     setView(v);
     const el = document.getElementById('hb-main'); if (el) el.scrollTop = 0;
   };
+  const [genieConv, setGenieConv] = useState(null);
   const openGenie = () => setGenieOpen(true);
-  const closeGenie = () => setGenieOpen(false);
+  const closeGenie = () => { setGenieOpen(false); setGenieConv(null); setGenieMsgs([]); };
   const askGenie = (text) => {
     setGenieOpen(true);
     setGenieMsgs(m => [...m, { from:'user', text }, { from:'genie', loading:true }]);
-    setTimeout(() => {
-      const r = genieReply(text);
-      setGenieMsgs(m => { const c = [...m]; c[c.length-1] = { from:'genie', ...r }; return c; });
-    }, 750);
+    fetch('/api/genie/ask', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: text, conversation_id: genieConv }),
+    })
+      .then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        if (d && d.conversation_id) setGenieConv(d.conversation_id);
+        if (ok && !d.error && d.text) {
+          setGenieMsgs(m => {
+            const c = [...m];
+            c[c.length-1] = { from:'genie', text: d.text, source: d.sql ? 'SQL · ' + d.sql.slice(0, 80) + (d.sql.length > 80 ? '…' : '') : 'Live Genie space' };
+            return c;
+          });
+        } else {
+          // Live Genie call failed; fall back to mock so the chat still feels responsive.
+          const r = genieReply(text);
+          setGenieMsgs(m => {
+            const c = [...m];
+            c[c.length-1] = { from:'genie', ...r, source: (r.source || 'mock') + ' (Genie unavailable: ' + (d && d.error ? d.error : 'HTTP ' + (ok?'200':'err')) + ')' };
+            return c;
+          });
+        }
+      })
+      .catch(e => {
+        const r = genieReply(text);
+        setGenieMsgs(m => {
+          const c = [...m];
+          c[c.length-1] = { from:'genie', ...r, source: (r.source || 'mock') + ' (Genie unreachable)' };
+          return c;
+        });
+      });
   };
 
   const lakebaseWrite = async (path, body, okMsg) => {

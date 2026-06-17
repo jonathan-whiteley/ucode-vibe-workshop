@@ -47,9 +47,9 @@ function genieReply(q) {
 }
 
 const SUGGESTIONS = [
-  'What should I prep extra of today?',
-  'Why is labor down vs last week?',
-  'Which items are at risk of running out before tomorrow?',
+  'Top 10 selling items yesterday by units sold',
+  'Average labor cost per daypart in the last 14 days',
+  'Average sentiment score per store in the last 30 days',
 ];
 
 const GeniePanel = () => {

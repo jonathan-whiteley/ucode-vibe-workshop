@@ -17,6 +17,15 @@ resources:
       description: "Operator Command Center reference build (facilitator copy)"
       source_code_path: ../src/app
 
+      # OBO (on-behalf-of-user) API scopes. Genie spaces are user-permissioned,
+      # so the App must forward the logged-in user's token with the `genie`
+      # scope when calling /api/2.0/genie/* — otherwise the SP's token is used
+      # and the call 403s with "Invalid scope, required scopes: genie".
+      user_api_scopes:
+        - genie
+        - sql
+        - dashboards.genie
+
       resources:
         - name: workshop_warehouse
           sql_warehouse:
