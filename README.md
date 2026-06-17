@@ -75,8 +75,7 @@ Full attendee setup + module-by-module prompts: [`docs/lab-companion-guide.md`](
 ucode-vibe-workshop/
 ├── docs/                              📘 Guides
 │   ├── facilitator-plan.md            # Pre-workshop checklist, agenda, risks, prompts
-│   ├── lab-companion-guide.md         # Attendee-facing: setup, modules, prompts
-│   └── data-audit.md                  # Design → schema mapping; gaps + scope cuts
+│   └── lab-companion-guide.md         # Attendee-facing: setup, modules, prompts
 │
 ├── data/                              📊 Synthetic data
 │   ├── README.md
@@ -121,7 +120,7 @@ ucode-vibe-workshop/
 
 60 days of history, anchored to **2026-06-22**. Item catalog + store roster driven by a `company` config in the generator — defaults to `lce`. Add a new entry in `COMPANY_CONFIGS` to re-skin for another customer.
 
-Column-level detail: [`data/README.md`](data/README.md). Design-to-schema mapping: [`docs/data-audit.md`](docs/data-audit.md).
+Column-level detail: [`data/README.md`](data/README.md).
 
 ---
 

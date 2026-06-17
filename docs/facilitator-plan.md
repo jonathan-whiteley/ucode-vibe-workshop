@@ -158,7 +158,7 @@ Materialized in `ioc_sandbox.vibe_workshop` (dev mirror at `jdub_demo.vibe_works
 
 Item catalog and store roster are driven by a `company` config in the data generator. Default is `lce` (Little Caesars items + locations); swap to `qsr_mexican` or add a new entry in `COMPANY_CONFIGS` to re-skin for another customer.
 
-See `data/README.md` and `docs/data-audit.md` for column-level details.
+See [`data/README.md`](../data/README.md) for column-level details.
 
 ---
 
