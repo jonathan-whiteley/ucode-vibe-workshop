@@ -52,6 +52,46 @@ const SUGGESTIONS = [
   'Average sentiment score per store in the last 30 days',
 ];
 
+/* Render the LIGHT markdown Genie returns: **bold**, • bullets, blank-line paragraphs.
+   Doesn't try to be a general markdown parser — Genie's response shape is narrow. */
+const renderInline = (text) => {
+  const parts = [];
+  let i = 0;
+  const re = /\*\*([^*]+)\*\*/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > i) parts.push(text.slice(i, m.index));
+    parts.push(<strong key={parts.length}>{m[1]}</strong>);
+    i = m.index + m[0].length;
+  }
+  if (i < text.length) parts.push(text.slice(i));
+  return parts;
+};
+const GenieText = ({ text }) => {
+  if (!text) return null;
+  const blocks = text.split(/\n{2,}/);
+  return (
+    <div style={{ fontSize:13.5, lineHeight:1.55, color:'var(--db-navy-800)', whiteSpace:'pre-wrap' }}>
+      {blocks.map((block, bi) => {
+        const lines = block.split('\n');
+        const bullets = lines.every(l => /^\s*[•\-*]\s+/.test(l));
+        if (bullets) {
+          return (
+            <ul key={bi} style={{ margin:bi === 0 ? '0 0 0 0' : '8px 0 0 0', paddingLeft:18, listStyle:'disc' }}>
+              {lines.map((l, li) => (
+                <li key={li} style={{ marginBottom:4 }}>{renderInline(l.replace(/^\s*[•\-*]\s+/, ''))}</li>
+              ))}
+            </ul>
+          );
+        }
+        return (
+          <p key={bi} style={{ margin:bi === 0 ? 0 : '8px 0 0 0' }}>{renderInline(block)}</p>
+        );
+      })}
+    </div>
+  );
+};
+
 const GeniePanel = () => {
   const { genieOpen, closeGenie, genieMsgs, askGenie, store } = useApp();
   const scrollRef = useRef(null);
@@ -87,7 +127,7 @@ const GeniePanel = () => {
                   <div style={{ background:'#fff', border:'1px solid var(--db-gray-lines)', borderRadius:'3px 12px 12px 12px', padding:'12px 14px' }}>
                     {msg.loading ? <span className="hb-dots" style={{ color:'var(--db-navy-400)', fontSize:18, letterSpacing:2 }}>•••</span> : (
                       <React.Fragment>
-                        <div style={{ fontSize:13.5, lineHeight:1.55, color:'var(--db-navy-800)' }}>{msg.text}</div>
+                        {typeof msg.text === 'string' ? <GenieText text={msg.text} /> : <div style={{ fontSize:13.5, lineHeight:1.55, color:'var(--db-navy-800)' }}>{msg.text}</div>}
                         {msg.viz && (
                           <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid var(--db-gray-lines)' }}>
                             <div style={{ fontSize:11, fontWeight:500, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--db-gray-text)' }}>{msg.viz.title}</div>

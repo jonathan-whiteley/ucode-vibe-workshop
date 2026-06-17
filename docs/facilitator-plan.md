@@ -188,6 +188,7 @@ The reference App in [`dab/src/app/`](../dab/src/app/) already implements all of
 - **SQL warehouse access:** `lib/deps.get_warehouse_client()` (`databricks-sql-connector` + SDK OAuth)
 - **TTL-cached reads:** `lib/sql_utils.fetch_all()` — 24h cache, one-shot retry on warehouse cold-starts
 - **Lakebase writes:** `lib/deps.get_lakebase_pool()` — per-pool OAuth tokens (Lakebase has no static passwords)
+- **Ask Genie chat panel:** [`routers/genie.py`](../dab/src/app/routers/genie.py) calls the Genie REST API with the user's OBO token (from `X-Forwarded-Access-Token`), threads `conversation_id` for multi-turn, and polls `/messages/{id}` until COMPLETED. The app resource declares `user_api_scopes: [genie, sql, dashboards.genie]` so the forwarded token has the right OAuth scopes. **Common attendee miss:** using the SP token (403 on the user-permissioned space) or rebuilding it as an iframe embed (no multi-turn, no SQL preview).
 - **Per-target config:** `/Workspace/Shared/command-center/config.json` at startup (see `lib/config.py`) — avoids hardcoding catalog/schema/genie_id in `app.yaml`
 
 ---
@@ -221,7 +222,7 @@ Sorted by likelihood. Highest-impact items first.
 | **SQL warehouse 500s** after idle / cold-start | Reference App's `sql_utils.py` retries on `RequestError` / session expiry — attendees writing their own backend should mirror that pattern. |
 | **Facilitator isn't workspace admin**(can't create Lakebase) | Two fallbacks in [`dab/README.md` § Lakebase binding fallback](../dab/README.md#lakebase-binding-fallback): admin pre-creates the instance, or comment out `lakebase.yml`. |
 | **Lakebase write-back fails**(perm / sequence grants) | Setup job grants `INSERT/SELECT` on tables AND `USAGE/SELECT` on SERIAL sequences. If attendee's App can't write, fall back to read-only demo. |
-| **Genie space not visible** to App's SP | App's `/api/genie` discovers by title; if SP lacks `CAN_VIEW`, the workspace config JSON provides the ID directly. |
+| **Ask Genie 403s with "Invalid scope" or "PermissionDenied"** on attendee builds | Attendee called Genie with the App SP credentials. Genie spaces are user-permissioned: use OBO (`X-Forwarded-Access-Token`) AND declare `user_api_scopes: [genie, sql, dashboards.genie]` on the App resource. Reference pattern in [`dab/src/app/routers/genie.py`](../dab/src/app/routers/genie.py). |
 | **FMAPI endpoint slow / over quota**| Pre-warm; have a backup endpoint identified. |
 
 ### Low likelihood

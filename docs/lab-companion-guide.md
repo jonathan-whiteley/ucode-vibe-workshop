@@ -185,7 +185,40 @@ Embed my dashboard into my app, one tile per pillar tab.
 ```
 
 ```text
-Add an "Ask Genie" tab to my app that embeds my Genie space.
+Add an "Ask Genie" chat panel to my app where users type questions in
+natural language and get answers (with the SQL Genie generated) back
+from my Genie space.
+
+Wiring requirements — the reference build at
+dab/src/app/routers/genie.py shows the exact working pattern; borrow
+it. Common ways this breaks:
+
+  1. Use OBO (on-behalf-of-user) auth, NOT the app's service principal.
+     Genie spaces are user-permissioned, so SP calls 403 on
+     start-conversation. The logged-in user's bearer token is in the
+     X-Forwarded-Access-Token request header.
+
+  2. In the app's resource block (dab/resources/app.yml), declare
+     user_api_scopes:
+       - genie
+       - sql
+       - dashboards.genie
+     Without these the forwarded user token lacks the genie scope and
+     start-conversation 403s with "Invalid scope, required scopes:
+     genie". After adding scopes, redeploy + you'll re-consent on first
+     open.
+
+  3. Support multi-turn: first ask calls
+     POST /api/2.0/genie/spaces/{space_id}/start-conversation;
+     follow-up asks call
+     POST /api/2.0/genie/spaces/{space_id}/conversations/{conv_id}/messages
+     so Genie sees prior context. The backend should return
+     conversation_id; the UI should thread it back on subsequent asks.
+     Reset the conversation_id when the user closes the panel.
+
+  4. Poll GET /messages/{msg_id} until status is COMPLETED (or up to
+     ~45s), then extract the assistant text + first SQL query from the
+     attachments array.
 ```
 
 ```text
@@ -340,7 +373,40 @@ Embed my dashboard into my app, one tile per pillar tab.
 ```
 
 ```text
-Add an "Ask Genie" tab to my app that embeds my Genie space.
+Add an "Ask Genie" chat panel to my app where users type questions in
+natural language and get answers (with the SQL Genie generated) back
+from my Genie space.
+
+Wiring requirements — the reference build at
+dab/src/app/routers/genie.py shows the exact working pattern; borrow
+it. Common ways this breaks:
+
+  1. Use OBO (on-behalf-of-user) auth, NOT the app's service principal.
+     Genie spaces are user-permissioned, so SP calls 403 on
+     start-conversation. The logged-in user's bearer token is in the
+     X-Forwarded-Access-Token request header.
+
+  2. In the app's resource block (dab/resources/app.yml), declare
+     user_api_scopes:
+       - genie
+       - sql
+       - dashboards.genie
+     Without these the forwarded user token lacks the genie scope and
+     start-conversation 403s with "Invalid scope, required scopes:
+     genie". After adding scopes, redeploy + you'll re-consent on first
+     open.
+
+  3. Support multi-turn: first ask calls
+     POST /api/2.0/genie/spaces/{space_id}/start-conversation;
+     follow-up asks call
+     POST /api/2.0/genie/spaces/{space_id}/conversations/{conv_id}/messages
+     so Genie sees prior context. The backend should return
+     conversation_id; the UI should thread it back on subsequent asks.
+     Reset the conversation_id when the user closes the panel.
+
+  4. Poll GET /messages/{msg_id} until status is COMPLETED (or up to
+     ~45s), then extract the assistant text + first SQL query from the
+     attachments array.
 ```
 
 ```text
