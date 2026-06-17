@@ -15,21 +15,20 @@
 
 ---
 
-## Agenda (1:00 - 4:00 PM ET)
+## Agenda
 
-| Time | Module | Duration | Outcome |
-|---|---|---|---|
-| 12:30-1:00 | Pre-workshop setup (async) | 30 min | `ucode` installed, IDE configured, ai-dev-kit skills pulled |
-| 1:00-1:10 | Welcome + finished-app demo | 10 min | Attendees see what they'll build; environment table reviewed |
-| 1:10-1:20 | Module 1: Explore the data | 10 min | Each attendee has schema summary for all 8 tables |
-| 1:20-1:40 | Module 2: Scaffold the App shell | 20 min | Empty AppKit app deployed and visible in browser |
-| 1:40-2:00 | Module 3: Build the Genie space | 20 min | Genie space answers natural-language questions over the 3 pillars |
-| 2:00-2:20 | Module 4: Build the AI/BI dashboard | 20 min | Dashboard with one widget per pillar |
-| 2:20-2:30 | Break | 10 min | |
-| 2:30-3:10 | Module 5: Integrate + AI insights + LCE branding | 40 min | App embeds Genie + dashboard, FMAPI "Recommended Actions" panel, LCE colors/logo |
-| 3:10-3:40 | Module 6: DAB + multi-task Job + CI-CD | 30 min | Bundle deployed to dev target; multi-task job runs end-to-end |
-| 3:40-3:55 | Demo round-robin | 15 min | Each attendee shows their App URL |
-| 3:55-4:00 | Wrap + take-home | 5 min | Teams channel, post-workshop office hours |
+| Time | Module | Outcome |
+|---|---|---|
+| 12:30-1:00 (pre) | Setup | `ucode` + IDE + ai-dev-kit ready |
+| 1:00-1:10 | Welcome + demo | See finished app, get environment values |
+| 1:10-1:20 | Module 1: Explore data | Agent knows your schema |
+| 1:20-1:40 | Module 2: App shell | Empty Command Center deployed |
+| 1:40-2:00 | Module 3: Genie space | Natural-language Q&A over 3 pillars |
+| 2:00-2:20 | Module 4: AI/BI dashboard | Widgets per pillar |
+| 2:20-2:30 | Break | |
+| 2:30-3:10 | Module 5: Integrate + AI + branding | Genie + dashboard + AI recommendations + LCE colors |
+| 3:10-3:40 | Module 6: DAB + Job + CI-CD | Bundle deployed, job running |
+| 3:40-4:00 | Demo round + wrap | Share your App URL |
 
 ---
 
@@ -201,13 +200,13 @@ The reference App in [`dab/src/app/`](../dab/src/app/) already implements all of
 
 ---
 
-## Risk Register
+## Troubleshooting
 
 Sorted by likelihood. Highest-impact items first.
 
 ### High likelihood
 
-| Risk | Mitigation |
+| Symptom | Fix |
 |---|---|
 | **First-time deploy fails:** `SCHEMA_DOES_NOT_EXIST` / `TABLE_OR_VIEW_NOT_FOUND` | Run `scripts/bootstrap.py` **before**`bundle deploy`. App's `uc_securable` bindings are validated at deploy time, so the 8 tables must exist (even empty). |
 | **App deploy fails on first run:** resources not registered | Drill `apps update --json` → `apps deploy` order. The ai-dev-kit skill handles this; reference App in `dab/` shows the working pattern. |
@@ -216,7 +215,7 @@ Sorted by likelihood. Highest-impact items first.
 
 ### Medium likelihood
 
-| Risk | Mitigation |
+| Symptom | Fix |
 |---|---|
 | **Warehouse name lookup fails** on `bundle deploy` | The bundle's `warehouse_id` is a `lookup` by name (`Serverless Starter Warehouse`); not every workspace has one. Always pass `--var warehouse_id=<id>`. |
 | **SQL warehouse 500s** after idle / cold-start | Reference App's `sql_utils.py` retries on `RequestError` / session expiry — attendees writing their own backend should mirror that pattern. |
@@ -227,7 +226,7 @@ Sorted by likelihood. Highest-impact items first.
 
 ### Low likelihood
 
-| Risk | Mitigation |
+| Symptom | Fix |
 |---|---|
 | **Synthetic data has bad joins / null columns**| Reference Genie + dashboard exercise the schema during T-1 week setup. |
 | **DAB module overruns**| Starter at `dab/` is fully working; attendees customize, not build from scratch. |

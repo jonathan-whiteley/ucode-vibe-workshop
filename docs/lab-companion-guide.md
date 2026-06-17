@@ -30,27 +30,6 @@
 
 ---
 
-## 🌐 Your Workshop Environment
-
-Most values are pre-filled below. The only one you set is **your initials**. Keep this table handy: you'll paste these values into prompts all afternoon.
-
-| Item | Your value |
-|---|---|
-| Your initials (lowercase, e.g. `jjw`) | `<INITIALS>` ← **you fill this in** |
-| Workspace URL | `https://adb-30827331698809.9.azuredatabricks.net` (lce-analytics-dev-adb) |
-| Shared data catalog.schema | `ioc_sandbox.vibe_workshop` |
-| Shared Lakebase instance | `command-center-lakebase` |
-| SQL warehouse name | `serverless` |
-| AI Gateway model endpoint (for `ucode codex`) | `databricks-gpt-oss-120b` |
-| FMAPI endpoint (for `ai_query()`) | `databricks-gpt-oss-120b` (same as above) |
-| LCE branding folder (in repo) | `branding/lce/` |
-| **Captured during workshop:** | |
-| Your Genie space ID | `<GENIE_SPACE_ID>` |
-| Your dashboard ID | `<DASHBOARD_ID>` |
-| Your App URL | `<APP_URL>` |
-
----
-
 ## 🧭 How to use this guide
 
 Every prompt below is in a **code block** — hit the copy button, paste into your coding agent. **You only fill in `<INITIALS>` once**, in the **⭐ Session setup** prompt at the start of the day-of section. Every prompt after that says "my app", "my Genie space", etc. — your agent already knows the values from the setup prompt.
@@ -277,16 +256,15 @@ The prompts in "Prereqs prompts" above match this checklist. Tick each box as yo
 
 ---
 
+> 💡 **Prompts live in [📋 All prompts in one place](#-all-prompts-in-one-place).** The module sections below give the goal, what to capture, and what to do if it breaks. Make sure you've already pasted the **⭐ Session setup** prompt — every prompt assumes the agent knows your initials, warehouse, catalog, etc.
+
+---
+
 ## 🔍 Module 1: Explore the Data (10 min)
 
 **Goal:** Ground the agent in the actual schema before building anything.
 
-> 💡 Make sure you've already pasted the **⭐ Session setup** prompt from the "All prompts" section. Every prompt below assumes the agent knows your initials, warehouse, catalog, etc.
-
-```text
-Module 1. Explore my workshop catalog. Show me schemas, row counts,
-and sample rows for all 8 tables. Save a summary as schema_summary.md.
-```
+**Prompt:** see Module 1 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order).
 
 Read the summary. Make sure the agent has it open in context for the rest of the workshop.
 
@@ -296,20 +274,11 @@ Read the summary. Make sure the agent has it open in context for the rest of the
 
 **Goal:** Get an empty Command Center deployed and visible. Doing this before Genie/dashboard means deployment issues surface early.
 
-```text
-Module 2. Scaffold my AppKit app with 3 tabs (Labor, Inventory,
-Guest Feedback) and placeholder content.
+**Prompt:** see Module 2 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order).
 
-The app's service principal needs SELECT on the 8 workshop tables
-and CAN_USE on the warehouse.
+**Capture:** App URL → `<APP_URL>`.
 
-Deploy with `apps update --json` first to register the resources,
-then `apps deploy`. Print the URL.
-```
-
-Paste the URL into your environment table as `<APP_URL>`.
-
-**Reference if you get stuck:** there's a fully-wired reference App in the workshop repo at `dab/src/app/`. The patterns in `lib/` (config, deps, sql_utils) and `routers/` are good cribs when wiring your own SQL + Lakebase + Genie integration.
+**Reference if you get stuck:** the fully-wired reference App at `dab/src/app/` is a good crib. The patterns in `lib/` (config, deps, sql_utils) and `routers/` show SQL + Lakebase + Genie integration end-to-end.
 
 ### If it breaks
 
@@ -323,20 +292,11 @@ Paste the URL into your environment table as `<APP_URL>`.
 
 **Goal:** Build a Genie space over all three pillars.
 
-```text
-Module 3. Create my Genie space over all 8 workshop tables.
-
-Add 6 sample questions (2 per pillar: Labor / Inventory / Guest
-Feedback) and 4 metric definitions (labor % of sales, days of
-cover, sell-through rate, net sentiment score).
-
-Test it with one question per pillar, then capture and remember
-the space ID.
-```
-
-If the answers are off, ask your agent to refine the instructions.
+**Prompt:** see Module 3 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order).
 
 **Capture:** Your Genie space ID (the agent should remember it for later modules).
+
+If the answers are off, ask your agent to refine the instructions.
 
 ---
 
@@ -344,15 +304,7 @@ If the answers are off, ask your agent to refine the instructions.
 
 **Goal:** A Lakeview dashboard with widgets per pillar.
 
-```text
-Module 4. Create my AI/BI dashboard with 4 widgets:
-  (1) labor % of sales last 30 days as a line chart
-  (2) sales by daypart today vs forecast as a grouped bar
-  (3) stock health by category (at par / below par) as a stacked bar
-  (4) sentiment timeline last 30 days
-
-Publish it, then capture and remember the dashboard ID.
-```
+**Prompt:** see Module 4 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order).
 
 **Capture:** Your dashboard ID (the agent should remember it for Module 5).
 
@@ -366,69 +318,11 @@ Stretch. Refill coffee. Make sure your App URL still loads.
 
 ## 🔗 Module 5: Integrate + AI Insights + LCE Branding (40 min)
 
-**Goal:** Wire Genie + dashboard into the App, add a "Recommended Actions" FMAPI panel, apply LCE branding. Paste these one at a time.
+**Goal:** Wire Genie + dashboard into the App, add a "Recommended Actions" FMAPI panel, apply LCE branding.
 
-```text
-Embed my dashboard into my app, one tile per pillar tab.
-```
+**Prompts:** see Module 5 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order) — 4 prompts, paste one at a time.
 
-```text
-Add an "Ask Genie" chat panel to my app where users type questions in
-natural language and get answers (with the SQL Genie generated) back
-from my Genie space.
-
-Wiring requirements — the reference build at
-dab/src/app/routers/genie.py shows the exact working pattern; borrow
-it. Common ways this breaks:
-
-  1. Use OBO (on-behalf-of-user) auth, NOT the app's service principal.
-     Genie spaces are user-permissioned, so SP calls 403 on
-     start-conversation. The logged-in user's bearer token is in the
-     X-Forwarded-Access-Token request header.
-
-  2. In the app's resource block (dab/resources/app.yml), declare
-     user_api_scopes:
-       - genie
-       - sql
-       - dashboards.genie
-     Without these the forwarded user token lacks the genie scope and
-     start-conversation 403s with "Invalid scope, required scopes:
-     genie". After adding scopes, redeploy + you'll re-consent on first
-     open.
-
-  3. Support multi-turn: first ask calls
-     POST /api/2.0/genie/spaces/{space_id}/start-conversation;
-     follow-up asks call
-     POST /api/2.0/genie/spaces/{space_id}/conversations/{conv_id}/messages
-     so Genie sees prior context. The backend should return
-     conversation_id; the UI should thread it back on subsequent asks.
-     Reset the conversation_id when the user closes the panel.
-
-  4. Poll GET /messages/{msg_id} until status is COMPLETED (or up to
-     ~45s), then extract the assistant text + first SQL query from the
-     attachments array.
-```
-
-```text
-Add a "Recommended Actions" sidebar visible on every tab. Use
-ai_query() with the model endpoint to recommend the top 3 actions
-an operator should take this week, based on today's KPIs across
-Labor / Inventory / Guest Feedback.
-
-Let users pick a store from a dropdown.
-```
-
-(The reference App in `dab/src/app/routers/` shows how to wire SQL warehouse reads, Lakebase writes, and Genie discovery. Borrow patterns liberally.)
-
-```text
-Apply LCE branding from branding/lce/ in the workshop repo:
-  - logo at branding/lce/logo.svg
-  - primary color #FF671B
-  - dark navbar
-  - page title "Command Center | LCE"
-
-Redeploy my app.
-```
+The Ask Genie prompt has explicit wiring requirements (OBO auth, `user_api_scopes`, multi-turn) — read it carefully. The reference App in `dab/src/app/routers/` shows how to wire SQL warehouse reads, Lakebase writes, and Genie discovery; borrow patterns liberally.
 
 ### If running low on time
 
@@ -440,25 +334,9 @@ Cut the dashboard-per-tab embed and put all the tiles on a single "Overview" tab
 
 **Goal:** Package everything as a Databricks Asset Bundle with a daily multi-task Job and dev/prod targets.
 
-The workshop repo already contains a working DAB at `dab/`. You'll fork or copy it and customize. Paste these one at a time.
+**Prompts:** see Module 6 in [All prompts](#-day-of-prompts-run-these-in-the-workshop-in-order) — 3 prompts, paste one at a time.
 
-```text
-Clone the workshop repo. Open dab/. Customize databricks.yml and
-the resource files to point at MY app, MY Genie space, and MY
-dashboard instead of the reference copies.
-```
-
-```text
-Add a daily job at 6am ET with 3 tasks:
-  (1) refresh derived tables in my sandbox
-  (2) score new sentiment via ai_query() and the model endpoint
-  (3) redeploy my app
-```
-
-```text
-Deploy the bundle to the dev target and run the job once. Then walk
-me through what I'd change to deploy to prod when I'm ready.
-```
+The workshop repo already contains a working DAB at `dab/`. You'll fork or copy it and customize.
 
 ---
 
@@ -477,6 +355,27 @@ Each attendee gets 1 minute:
 - Workshop Teams channel: `<TEAMS_CHANNEL>` for ongoing questions
 - Optional office hours 1 week after
 - Your App, DAB, and ucode setup are yours: keep iterating
+
+---
+
+## 🌐 Workshop Environment (reference)
+
+Pre-filled values used throughout the workshop. The **⭐ Session setup** prompt at the top already pastes these into your agent — this table is here in case you need to look one up manually.
+
+| Item | Your value |
+|---|---|
+| Your initials (lowercase, e.g. `jjw`) | `<INITIALS>` ← **you fill this in** |
+| Workspace URL | `https://adb-30827331698809.9.azuredatabricks.net` (lce-analytics-dev-adb) |
+| Shared data catalog.schema | `ioc_sandbox.vibe_workshop` |
+| Shared Lakebase instance | `command-center-lakebase` |
+| SQL warehouse name | `serverless` |
+| AI Gateway model endpoint (for `ucode codex`) | `databricks-gpt-oss-120b` |
+| FMAPI endpoint (for `ai_query()`) | `databricks-gpt-oss-120b` (same as above) |
+| LCE branding folder (in repo) | `branding/lce/` |
+| **Captured during workshop:** | |
+| Your Genie space ID | `<GENIE_SPACE_ID>` |
+| Your dashboard ID | `<DASHBOARD_ID>` |
+| Your App URL | `<APP_URL>` |
 
 ---
 
