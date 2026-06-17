@@ -64,3 +64,15 @@ targets:
     variables:
       catalog: "ioc_sandbox"
       schema: "vibe_workshop"
+
+  e2demo:
+    # Clean-room test target in the e2-demo-field-eng workspace.
+    # Auth first: databricks auth login --host https://e2-demo-field-eng.cloud.databricks.com --profile e2-demo-west
+    mode: development
+    presets:
+      name_prefix: ""
+    workspace:
+      profile: e2-demo-west
+    variables:
+      catalog: "jdub_demo_aws"
+      schema: "vibe_workshop"

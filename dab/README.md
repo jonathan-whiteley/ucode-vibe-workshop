@@ -27,18 +27,35 @@ The resources have hard dependencies on each other. Run the steps in this order:
 ```bash
 cd dab
 
-# 1) Sanity-check the bundle
-databricks bundle validate -t lce
+# 1) Bootstrap UC: create the catalog/schema + 8 empty tables.
+#    Required ONCE per workspace because the App's resource block binds the
+#    App's SP to specific UC tables, and DAB validates those bindings at
+#    deploy time (so the tables must exist, even if empty). The setup job
+#    later overwrites them with synthetic data.
+python3 scripts/bootstrap.py --profile <target_profile> \
+    --warehouse-id <warehouse_id> --catalog <catalog>
 
-# 2) Create the Lakebase instance, job, dashboard, App resource
+# 2) Sanity-check the bundle
+databricks bundle validate -t <target>
+
+# 3) Create the Lakebase instance, job, dashboard, App resource
 #    (the App is registered but NOT started; it can't query data yet)
-databricks bundle deploy -t lce
+databricks bundle deploy -t <target> --var warehouse_id=<warehouse_id>
 
-# 3) Run the setup job (data gen + Lakebase DDL + Genie space)
+# 4) Run the setup job (data gen + Lakebase DDL + Genie space)
 #    Takes ~3-4 min. Must succeed before the App will be useful.
-databricks bundle run command_center_setup -t lce
+databricks bundle run command_center_setup -t <target>
 
-# 4) Start the App. The wiring banner shows live counts + Genie space.
+# 5) Start the App. The wiring banner shows live counts + Genie space.
+databricks bundle run command_center_app -t <target>
+```
+
+For the LCE target specifically:
+
+```bash
+python3 scripts/bootstrap.py --profile lce --warehouse-id <id> --catalog ioc_sandbox
+databricks bundle deploy -t lce --var warehouse_id=<id>
+databricks bundle run command_center_setup -t lce
 databricks bundle run command_center_app -t lce
 ```
 
@@ -46,12 +63,13 @@ databricks bundle run command_center_app -t lce
 
 | Step | Depends on | Failure mode if skipped |
 |---|---|---|
+| `bootstrap.py` pre-creates catalog/schema + empty tables | Workspace admin or sufficient UC privileges | `bundle deploy` fails on first run: `Failed to retrieve UC table info ... SCHEMA_DOES_NOT_EXIST` because the App's `uc_securable` resource bindings look up the tables at deploy time |
 | `bundle deploy` creates the Lakebase instance | Workspace admin to create the instance | App deploy fails because its `lakebase` resource binding can't bind to a non-existent instance |
 | `command_center_setup` job creates Lakebase **tables** | Lakebase instance exists | App's `/api/writes/*` endpoints 502 with "relation does not exist" |
 | `command_center_setup` job creates the Genie space | Data exists in UC tables | App's `/api/genie` shows "no matching space" |
 | `command_center_app` start | All of the above | Wiring banner shows 0 counts and "Genie: not yet wired" |
 
-The App will still load (and the banner will gracefully say "disconnected") even if step 3 hasn't run yet, so you can deploy + verify the App scaffolding first if you want to test deployment.
+The App will still load (and the banner will gracefully say "disconnected") even if step 4 hasn't run yet, so you can deploy + verify the App scaffolding first if you want to test deployment.
 
 ## Variables
 
@@ -104,6 +122,45 @@ dab/
         ├── routers/                # /api/wiring, /api/today, /api/labor, /api/inventory, /api/feedback, /api/genie, /api/writes
         └── static/                 # Copy of app/reference-prototype (Homebase HTML/JSX/CSS) + wiring-banner.js
 ```
+
+## Common deploy gotchas (learned the hard way)
+
+1. **Warehouse name lookup fails.** `databricks.yml` declares
+   `warehouse_id` as a `lookup` by name (`Serverless Starter Warehouse`).
+   Not every workspace has a warehouse by that name. **Workaround:** pass
+   `--var warehouse_id=<id>` on every `bundle validate` / `bundle deploy`
+   invocation, or change the lookup name in `databricks.yml` to match the
+   target workspace.
+
+2. **Workspace App quota (300/workspace).** Deploys fail with
+   `Workspace ... has reached the maximum limit of 300 apps`. Delete
+   unused apps in the workspace before retrying (`databricks apps list` →
+   `databricks apps delete <name>`).
+
+3. **App's per-table grants need tables to exist.** The `uc_securable`
+   resource bindings in `resources/app.yml` list 8 specific tables. DAB
+   validates each binding at deploy time. If the schema or any table is
+   missing, deploy fails with `SCHEMA_DOES_NOT_EXIST` or
+   `TABLE_OR_VIEW_NOT_FOUND`. **Fix:** run `scripts/bootstrap.py` once
+   before the first `bundle deploy` in a workspace (creates the schema
+   and 8 empty tables; setup job overwrites them with data).
+
+4. **Lakebase write-back needs sequence grants.** Tables created with
+   `SERIAL` event_id columns also need `USAGE, SELECT` on the underlying
+   sequence — table-level grants alone aren't enough. The setup job
+   applies both.
+
+5. **Serverless notebook SDK lags `w.database`.** The Lakebase SDK
+   surface (`w.database.generate_database_credential`) isn't always
+   present even after pinning `databricks-sdk>=0.40`. The
+   `02_init_lakebase` notebook prefers `w.database` but falls back to
+   raw `/api/2.0/database/credentials`.
+
+6. **Genie space discovery requires CAN_VIEW on the App's SP.** Newly
+   created spaces aren't visible to other SPs without an ACL grant. The
+   App reads the Genie space ID from
+   `/Workspace/Shared/command-center/config.json` (written by the setup
+   job) instead of discovery, which bypasses the visibility issue.
 
 ## Lakebase binding fallback
 

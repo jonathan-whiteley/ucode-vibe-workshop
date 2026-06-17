@@ -32,13 +32,18 @@ The reference build is **Command Center**, a store-operations console for a sing
 git clone https://github.com/jonathan-whiteley/ucode-vibe-workshop
 cd ucode-vibe-workshop/dab
 
-databricks bundle validate -t lce
-databricks bundle deploy  -t lce              # Lakebase + job + dashboard + App resources
-databricks bundle run command_center_setup -t lce   # data + Lakebase DDL + Genie space
-databricks bundle run command_center_app -t lce     # start the App
+# Bootstrap: pre-create catalog/schema + empty tables (required on a fresh workspace).
+# DAB validates the App's per-table resource bindings at deploy time, so the tables
+# must exist (even empty) before `bundle deploy`. The setup job overwrites them later.
+python3 scripts/bootstrap.py --profile <profile> --warehouse-id <id> --catalog <catalog>
+
+databricks bundle validate -t <target>
+databricks bundle deploy  -t <target> --var warehouse_id=<id>     # Lakebase + job + dashboard + App
+databricks bundle run command_center_setup -t <target>            # data + Lakebase DDL + Genie space
+databricks bundle run command_center_app   -t <target>            # start the App
 ```
 
-Three steps from a fresh workspace to a fully-wired demo. See [`dab/README.md`](dab/README.md) for the order-of-ops details + Lakebase admin caveat.
+Five steps from a fresh workspace to a fully-wired demo. See [`dab/README.md`](dab/README.md) for the order-of-ops details + Lakebase / app-limit / sequence-grant caveats.
 
 ## Quick start (attendee, pre-workshop)
 
