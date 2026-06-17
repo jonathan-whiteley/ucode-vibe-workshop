@@ -25,12 +25,12 @@ variables:
     description: "Schema for the 8-table workshop dataset"
     default: "vibe_workshop"
   warehouse_id:
-    description: "SQL warehouse used by the job, dashboard, and app"
+    description: "SQL warehouse used by the job, dashboard, and app. Default lookup name 'serverless' matches the LCE workshop warehouse; override with --var warehouse_id=<id> for other workspaces."
     lookup:
-      warehouse: "Serverless Starter Warehouse"
+      warehouse: "serverless"
   fmapi_endpoint:
-    description: "Foundation Model API endpoint for ai_query() calls"
-    default: "databricks-meta-llama-3-3-70b-instruct"
+    description: "Model endpoint used by both ai_query() in the app AND the AI Gateway route for the ucode coding agent. Same endpoint serves both for simplicity. Defaults to a GPT model since attendees run `ucode codex`."
+    default: "databricks-gpt-oss-120b"
   data_end_date:
     description: "Latest date in the synthetic data, YYYY-MM-DD"
     default: "2026-06-22"

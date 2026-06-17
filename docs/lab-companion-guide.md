@@ -32,17 +32,17 @@
 
 ## 🌐 Your Workshop Environment
 
-Fill these in from the facilitator's pre-workshop email. Keep this table handy: you'll paste these values into prompts all afternoon.
+Most values are pre-filled below. The only one you set is **your initials**. Keep this table handy: you'll paste these values into prompts all afternoon.
 
 | Item | Your value |
 |---|---|
-| Your initials (lowercase, e.g. `jjw`) | `<INITIALS>` |
+| Your initials (lowercase, e.g. `jjw`) | `<INITIALS>` ← **you fill this in** |
 | Workspace URL | `https://adb-30827331698809.9.azuredatabricks.net` (lce-analytics-dev-adb) |
 | Shared data catalog.schema | `ioc_sandbox.vibe_workshop` |
 | Shared Lakebase instance | `command-center-lakebase` |
-| SQL warehouse name | `<WAREHOUSE_NAME>` |
-| AI Gateway model endpoint | `<MODEL_ENDPOINT>` |
-| FMAPI endpoint | `<FMAPI_ENDPOINT>` (e.g. `databricks-meta-llama-3-3-70b-instruct`) |
+| SQL warehouse name | `serverless` |
+| AI Gateway model endpoint (for `ucode codex`) | `databricks-gpt-oss-120b` |
+| FMAPI endpoint (for `ai_query()`) | `databricks-gpt-oss-120b` (same as above) |
 | LCE branding folder (in repo) | `branding/lce/` |
 | **Captured during workshop:** | |
 | Your Genie space ID | `<GENIE_SPACE_ID>` |
@@ -53,7 +53,7 @@ Fill these in from the facilitator's pre-workshop email. Keep this table handy: 
 
 ## 🧭 How to use this guide
 
-Every prompt below is in a **code block** — hit the copy button, paste into your coding agent. Placeholders (`<INITIALS>`, `<WAREHOUSE_NAME>`, etc.) come from the env table above; fill them in before pasting.
+Every prompt below is in a **code block** — hit the copy button, paste into your coding agent. The only placeholder you need to fill in is `<INITIALS>` (your initials); the warehouse, model endpoint, and catalog are already filled in. As you go, you'll capture `<GENIE_SPACE_ID>` (Module 3) and `<DASHBOARD_ID>` (Module 4) and substitute those into later prompts.
 
 Prompts are short on purpose. Your agent has **ai-dev-kit** skills loaded — it knows how to build apps, Genie spaces, dashboards, and DABs on Databricks. Tell it *what*; the skills know *how*. **Always read what it generates before running it.**
 
@@ -93,34 +93,56 @@ Configure my MCP servers. Add Databricks SQL and the Managed Databricks MCPs.
 Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims_* and 5 facts_*).
 ```
 
-If the smoke test returns 8 tables, you're ready. If anything above fails, ping the facilitator in the workshop Slack channel **before** the workshop starts.
+If the smoke test returns 8 tables, you're ready. If anything above fails, ping the facilitator in the workshop Teams channel **before** the workshop starts.
 
 ### 🚀 Day-of prompts (run these in the workshop, in order)
 
-Fill in `<INITIALS>`, `<WAREHOUSE_NAME>`, `<GENIE_SPACE_ID>`, `<DASHBOARD_ID>`, `<FMAPI_ENDPOINT>` from your env table.
+Substitute `<INITIALS>` everywhere it appears. The Genie space ID and dashboard ID will be captured in Modules 3 & 4 and used in Module 5.
 
 **Module 1 — Explore the data:**
 
 ```text
-Explore ioc_sandbox.vibe_workshop. Show me schemas, row counts, and sample rows for all 8 tables. Save a summary as schema_summary.md.
+Explore ioc_sandbox.vibe_workshop. Show me schemas, row counts, and
+sample rows for all 8 tables. Save a summary as schema_summary.md.
 ```
 
 **Module 2 — App shell:**
 
 ```text
-Scaffold an AppKit app called <INITIALS>-command-center with 3 tabs (Labor, Inventory, Guest Feedback) and placeholder content. The app's service principal needs SELECT on the 8 tables in ioc_sandbox.vibe_workshop and CAN_USE on warehouse <WAREHOUSE_NAME>. Deploy with `apps update --json` first to register the resources, then `apps deploy`. Open the URL.
+Scaffold an AppKit app called <INITIALS>-command-center with 3 tabs
+(Labor, Inventory, Guest Feedback) and placeholder content.
+
+The app's service principal needs SELECT on the 8 tables in
+ioc_sandbox.vibe_workshop and CAN_USE on warehouse serverless.
+
+Deploy with `apps update --json` first to register the resources,
+then `apps deploy`. Open the URL.
 ```
 
 **Module 3 — Genie space:**
 
 ```text
-Create a Genie space called "<INITIALS> Command Center" over all tables in ioc_sandbox.vibe_workshop. Use warehouse <WAREHOUSE_NAME>. Add 6 sample questions (2 per pillar: Labor / Inventory / Guest Feedback) and 4 metric definitions (labor % of sales, days of cover, sell-through rate, net sentiment score). Test it with one question per pillar. Print the space ID at the end.
+Create a Genie space called "<INITIALS> Command Center" over all
+tables in ioc_sandbox.vibe_workshop. Use warehouse serverless.
+
+Add 6 sample questions (2 per pillar: Labor / Inventory / Guest
+Feedback) and 4 metric definitions (labor % of sales, days of
+cover, sell-through rate, net sentiment score).
+
+Test it with one question per pillar. Print the space ID at the end.
 ```
 
 **Module 4 — AI/BI dashboard:**
 
 ```text
-Create an AI/BI dashboard called "<INITIALS> Operator Insights" on warehouse <WAREHOUSE_NAME>. Add 4 widgets: (1) labor % of sales last 30 days as a line chart, (2) sales by daypart today vs forecast as a grouped bar, (3) stock health by category (at par / below par) as a stacked bar, (4) sentiment timeline last 30 days. Publish it and print the dashboard ID.
+Create an AI/BI dashboard called "<INITIALS> Operator Insights" on
+warehouse serverless. Add 4 widgets:
+  (1) labor % of sales last 30 days as a line chart
+  (2) sales by daypart today vs forecast as a grouped bar
+  (3) stock health by category (at par / below par) as a stacked bar
+  (4) sentiment timeline last 30 days
+
+Publish it and print the dashboard ID.
 ```
 
 **Module 5 — Integrate + AI + branding** (paste one at a time):
@@ -130,36 +152,57 @@ Embed dashboard <DASHBOARD_ID> into my app, one tile per pillar tab.
 ```
 
 ```text
-Add an "Ask Genie" tab to my app that embeds Genie space <GENIE_SPACE_ID>.
+Add an "Ask Genie" tab to my app that embeds Genie space
+<GENIE_SPACE_ID>.
 ```
 
 ```text
-Add a "Recommended Actions" sidebar visible on every tab. Use ai_query() with endpoint <FMAPI_ENDPOINT> to recommend the top 3 actions an operator should take this week, based on today's KPIs across Labor / Inventory / Guest Feedback. Let users pick a store from a dropdown.
+Add a "Recommended Actions" sidebar visible on every tab. Use
+ai_query() with endpoint databricks-gpt-oss-120b to recommend the
+top 3 actions an operator should take this week, based on today's
+KPIs across Labor / Inventory / Guest Feedback.
+
+Let users pick a store from a dropdown.
 ```
 
 ```text
-Apply LCE branding from branding/lce/ in the workshop repo (https://github.com/jonathan-whiteley/ucode-vibe-workshop): logo at branding/lce/logo.svg, primary color #FF671B, dark navbar, page title "Command Center | LCE". Redeploy the app.
+Apply LCE branding from branding/lce/ in the workshop repo
+(https://github.com/jonathan-whiteley/ucode-vibe-workshop):
+  - logo at branding/lce/logo.svg
+  - primary color #FF671B
+  - dark navbar
+  - page title "Command Center | LCE"
+
+Redeploy the app.
 ```
 
 **Module 6 — DAB + Job + CI-CD** (paste one at a time):
 
 ```text
-Clone https://github.com/jonathan-whiteley/ucode-vibe-workshop. Open dab/. Customize databricks.yml and the resource files to point at MY app <INITIALS>-command-center, MY Genie space <GENIE_SPACE_ID>, and MY dashboard <DASHBOARD_ID> instead of the reference copies.
+Clone https://github.com/jonathan-whiteley/ucode-vibe-workshop.
+Open dab/. Customize databricks.yml and the resource files to point
+at MY app <INITIALS>-command-center, MY Genie space
+<GENIE_SPACE_ID>, and MY dashboard <DASHBOARD_ID> instead of the
+reference copies.
 ```
 
 ```text
-Add a daily job at 6am ET with 3 tasks: (1) refresh derived tables in my sandbox, (2) score new sentiment via ai_query() and <FMAPI_ENDPOINT>, (3) redeploy the app.
+Add a daily job at 6am ET with 3 tasks:
+  (1) refresh derived tables in my sandbox
+  (2) score new sentiment via ai_query() and databricks-gpt-oss-120b
+  (3) redeploy the app
 ```
 
 ```text
-Deploy the bundle to the dev target and run the job once. Then walk me through what I'd change to deploy to prod when I'm ready.
+Deploy the bundle to the dev target and run the job once. Then walk
+me through what I'd change to deploy to prod when I'm ready.
 ```
 
 ---
 
 ## 🎓 Step 0: Pre-Workshop Setup (30 min, do this before 1pm)
 
-The prompts in "Prereqs prompts" above match this checklist. Tick each box as you go. If any step fails, ping the facilitator in the workshop Slack channel **before** the workshop starts.
+The prompts in "Prereqs prompts" above match this checklist. Tick each box as you go. If any step fails, ping the facilitator in the workshop Teams channel **before** the workshop starts.
 
 - [ ] `uv` installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - [ ] `npm` installed (`brew install node` on macOS, or see nodejs.org)
@@ -177,7 +220,8 @@ The prompts in "Prereqs prompts" above match this checklist. Tick each box as yo
 **Goal:** Ground the agent in the actual schema before building anything.
 
 ```text
-Explore ioc_sandbox.vibe_workshop. Show me schemas, row counts, and sample rows for all 8 tables. Save a summary as schema_summary.md.
+Explore ioc_sandbox.vibe_workshop. Show me schemas, row counts, and
+sample rows for all 8 tables. Save a summary as schema_summary.md.
 ```
 
 Read the summary. Make sure the agent has it open in context for the rest of the workshop.
@@ -189,7 +233,14 @@ Read the summary. Make sure the agent has it open in context for the rest of the
 **Goal:** Get an empty Command Center deployed and visible. Doing this before Genie/dashboard means deployment issues surface early.
 
 ```text
-Scaffold an AppKit app called <INITIALS>-command-center with 3 tabs (Labor, Inventory, Guest Feedback) and placeholder content. The app's service principal needs SELECT on the 8 tables in ioc_sandbox.vibe_workshop and CAN_USE on warehouse <WAREHOUSE_NAME>. Deploy with `apps update --json` first to register the resources, then `apps deploy`. Open the URL.
+Scaffold an AppKit app called <INITIALS>-command-center with 3 tabs
+(Labor, Inventory, Guest Feedback) and placeholder content.
+
+The app's service principal needs SELECT on the 8 tables in
+ioc_sandbox.vibe_workshop and CAN_USE on warehouse serverless.
+
+Deploy with `apps update --json` first to register the resources,
+then `apps deploy`. Open the URL.
 ```
 
 Paste the URL into your environment table as `<APP_URL>`.
@@ -209,7 +260,14 @@ Paste the URL into your environment table as `<APP_URL>`.
 **Goal:** Build a Genie space over all three pillars.
 
 ```text
-Create a Genie space called "<INITIALS> Command Center" over all tables in ioc_sandbox.vibe_workshop. Use warehouse <WAREHOUSE_NAME>. Add 6 sample questions (2 per pillar: Labor / Inventory / Guest Feedback) and 4 metric definitions (labor % of sales, days of cover, sell-through rate, net sentiment score). Test it with one question per pillar. Print the space ID at the end.
+Create a Genie space called "<INITIALS> Command Center" over all
+tables in ioc_sandbox.vibe_workshop. Use warehouse serverless.
+
+Add 6 sample questions (2 per pillar: Labor / Inventory / Guest
+Feedback) and 4 metric definitions (labor % of sales, days of
+cover, sell-through rate, net sentiment score).
+
+Test it with one question per pillar. Print the space ID at the end.
 ```
 
 If the answers are off, ask your agent to refine the instructions.
@@ -223,7 +281,14 @@ If the answers are off, ask your agent to refine the instructions.
 **Goal:** A Lakeview dashboard with widgets per pillar.
 
 ```text
-Create an AI/BI dashboard called "<INITIALS> Operator Insights" on warehouse <WAREHOUSE_NAME>. Add 4 widgets: (1) labor % of sales last 30 days as a line chart, (2) sales by daypart today vs forecast as a grouped bar, (3) stock health by category (at par / below par) as a stacked bar, (4) sentiment timeline last 30 days. Publish it and print the dashboard ID.
+Create an AI/BI dashboard called "<INITIALS> Operator Insights" on
+warehouse serverless. Add 4 widgets:
+  (1) labor % of sales last 30 days as a line chart
+  (2) sales by daypart today vs forecast as a grouped bar
+  (3) stock health by category (at par / below par) as a stacked bar
+  (4) sentiment timeline last 30 days
+
+Publish it and print the dashboard ID.
 ```
 
 **Capture:** Dashboard ID → `<DASHBOARD_ID>`.
@@ -245,17 +310,30 @@ Embed dashboard <DASHBOARD_ID> into my app, one tile per pillar tab.
 ```
 
 ```text
-Add an "Ask Genie" tab to my app that embeds Genie space <GENIE_SPACE_ID>.
+Add an "Ask Genie" tab to my app that embeds Genie space
+<GENIE_SPACE_ID>.
 ```
 
 ```text
-Add a "Recommended Actions" sidebar visible on every tab. Use ai_query() with endpoint <FMAPI_ENDPOINT> to recommend the top 3 actions an operator should take this week, based on today's KPIs across Labor / Inventory / Guest Feedback. Let users pick a store from a dropdown.
+Add a "Recommended Actions" sidebar visible on every tab. Use
+ai_query() with endpoint databricks-gpt-oss-120b to recommend the
+top 3 actions an operator should take this week, based on today's
+KPIs across Labor / Inventory / Guest Feedback.
+
+Let users pick a store from a dropdown.
 ```
 
 (The reference App in `dab/src/app/routers/` shows how to wire SQL warehouse reads, Lakebase writes, and Genie discovery. Borrow patterns liberally.)
 
 ```text
-Apply LCE branding from branding/lce/ in the workshop repo (https://github.com/jonathan-whiteley/ucode-vibe-workshop): logo at branding/lce/logo.svg, primary color #FF671B, dark navbar, page title "Command Center | LCE". Redeploy the app.
+Apply LCE branding from branding/lce/ in the workshop repo
+(https://github.com/jonathan-whiteley/ucode-vibe-workshop):
+  - logo at branding/lce/logo.svg
+  - primary color #FF671B
+  - dark navbar
+  - page title "Command Center | LCE"
+
+Redeploy the app.
 ```
 
 ### If running low on time
@@ -271,15 +349,23 @@ Cut the dashboard-per-tab embed and put all the tiles on a single "Overview" tab
 The workshop repo already contains a working DAB at `dab/`. You'll fork or copy it and customize. Paste these one at a time.
 
 ```text
-Clone https://github.com/jonathan-whiteley/ucode-vibe-workshop. Open dab/. Customize databricks.yml and the resource files to point at MY app <INITIALS>-command-center, MY Genie space <GENIE_SPACE_ID>, and MY dashboard <DASHBOARD_ID> instead of the reference copies.
+Clone https://github.com/jonathan-whiteley/ucode-vibe-workshop.
+Open dab/. Customize databricks.yml and the resource files to point
+at MY app <INITIALS>-command-center, MY Genie space
+<GENIE_SPACE_ID>, and MY dashboard <DASHBOARD_ID> instead of the
+reference copies.
 ```
 
 ```text
-Add a daily job at 6am ET with 3 tasks: (1) refresh derived tables in my sandbox, (2) score new sentiment via ai_query() and <FMAPI_ENDPOINT>, (3) redeploy the app.
+Add a daily job at 6am ET with 3 tasks:
+  (1) refresh derived tables in my sandbox
+  (2) score new sentiment via ai_query() and databricks-gpt-oss-120b
+  (3) redeploy the app
 ```
 
 ```text
-Deploy the bundle to the dev target and run the job once. Then walk me through what I'd change to deploy to prod when I'm ready.
+Deploy the bundle to the dev target and run the job once. Then walk
+me through what I'd change to deploy to prod when I'm ready.
 ```
 
 ---
@@ -296,7 +382,7 @@ Each attendee gets 1 minute:
 
 ## 🎁 Wrap (5 min, 3:55-4:00)
 
-- Workshop Slack channel: `<SLACK_CHANNEL>` for ongoing questions
+- Workshop Teams channel: `<TEAMS_CHANNEL>` for ongoing questions
 - Optional office hours 1 week after
 - Your App, DAB, and ucode setup are yours: keep iterating
 

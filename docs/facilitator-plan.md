@@ -29,7 +29,7 @@
 | 2:30-3:10 | Module 5: Integrate + AI insights + LCE branding | 40 min | App embeds Genie + dashboard, FMAPI "Recommended Actions" panel, LCE colors/logo |
 | 3:10-3:40 | Module 6: DAB + multi-task Job + CI-CD | 30 min | Bundle deployed to dev target; multi-task job runs end-to-end |
 | 3:40-3:55 | Demo round-robin | 15 min | Each attendee shows their App URL |
-| 3:55-4:00 | Wrap + take-home | 5 min | Slack channel, post-workshop office hours |
+| 3:55-4:00 | Wrap + take-home | 5 min | Teams channel, post-workshop office hours |
 
 ---
 
@@ -45,9 +45,10 @@
 |---|---|
 | **Databricks Apps** | Hosts the Command Center App |
 | **Genie spaces** (Previews) | Natural-language Q&A pillar |
-| **Foundation Model API** | `ai_query()` calls (`databricks-meta-llama-3-3-70b-instruct`) |
-| **AI Gateway** access to `databricks-claude-sonnet-4-6` | Powers the ucode coding agent for attendees |
+| **Foundation Model API + AI Gateway** → `databricks-gpt-oss-120b` | Single GPT endpoint serves both `ai_query()` in the app AND the AI Gateway route for `ucode codex`. Confirm the endpoint exists and the attendee group has `CAN_USE`. |
 | **Lakebase** (Postgres preview) | Write-back persistence (release POs, replies, schedule approvals) |
+
+> 💡 **Why one model endpoint:** the attendee guide pre-fills both `<MODEL_ENDPOINT>` (AI Gateway → `ucode codex`) and `<FMAPI_ENDPOINT>` (`ai_query()` in the app) as `databricks-gpt-oss-120b` so attendees only see one name. If LCE prefers a different GPT route, override with `--var fmapi_endpoint=<name>` at deploy time and update the env table in `docs/lab-companion-guide.md` to match.
 
 #### 🔑 Who needs what permission
 
@@ -63,9 +64,19 @@
 **👥 Attendee group** (e.g. `workshop-attendees`)
 - Databricks SQL entitlement · workspace access · serverless jobs entitlement
 - `SELECT` on `ioc_sandbox.vibe_workshop.*` · `CAN_USE` on the shared warehouse
-- `CAN_VIEW` on the reference Genie space · `CAN_USE` on the FMAPI endpoint
+- `CAN_VIEW` on the reference Genie space · `CAN_USE` on the FMAPI/AI Gateway endpoint
 - `CAN_CREATE` for new Apps in their own scope
-- ✅ Setup notebook auto-grants the SCHEMA SELECT (`--var attendee_group=<group>`); LCE admin handles the rest
+
+The setup notebook handles the UC grants automatically when you deploy with `--var attendee_group=<group>` (default `users`). For the warehouse + Genie + endpoint perms, paste this into a SQL warehouse query (substitute `<attendee_group>`):
+
+```sql
+-- UC grants (also auto-applied by command_center_setup with --var attendee_group=<group>):
+GRANT USE CATALOG ON CATALOG ioc_sandbox TO `<attendee_group>`;
+GRANT USE SCHEMA ON SCHEMA ioc_sandbox.vibe_workshop TO `<attendee_group>`;
+GRANT SELECT ON SCHEMA ioc_sandbox.vibe_workshop TO `<attendee_group>`;
+```
+
+The warehouse `CAN_USE`, Genie `CAN_VIEW`, and endpoint `CAN_USE` grants are set via the workspace UI (or REST) — Databricks doesn't expose SQL DDL for those.
 
 **👤 Each attendee's App SP** (created in Module 2)
 - Same shape as the reference App SP, scoped to attendee's own resources
@@ -153,7 +164,7 @@ See `data/README.md` and `docs/data-audit.md` for column-level details.
 
 ## 🎓 Pre-Workshop: Attendee Setup (30 min, async)
 
-Single source of truth: **[Lab Companion Guide § Prereqs prompts](lab-companion-guide.md#prereqs-prompts-run-these-before-the-workshop)**. Send that section to attendees 1-3 days out. Stragglers ping the workshop Slack channel before 1pm ET.
+Single source of truth: **[Lab Companion Guide § Prereqs prompts](lab-companion-guide.md#prereqs-prompts-run-these-before-the-workshop)**. Send that section to attendees 1-3 days out. Stragglers ping the workshop Teams channel before 1pm ET.
 
 ---
 
@@ -184,7 +195,7 @@ The reference App in [`dab/src/app/`](../dab/src/app/) already implements all of
 ### 🎤 Demo + Wrap (20 min, 3:40-4:00)
 
 - 1 min per attendee: share App URL, show one Genie answer, show one Recommended Action
-- Workshop Slack channel for ongoing questions
+- Workshop Teams channel for ongoing questions
 - Optional office hours follow-up 1 week later
 
 ---
