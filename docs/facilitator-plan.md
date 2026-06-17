@@ -167,39 +167,6 @@ Single source of truth: **[Lab Companion Guide § Prereqs prompts](lab-companion
 
 ---
 
-## Module-by-Module Plan
-
-Prompt text lives in the **[Lab Companion Guide § Day-of prompts](lab-companion-guide.md#-day-of-prompts-run-these-in-the-workshop-in-order)**(single source of truth). This section is the **facilitator's** at-a-glance: goal, what to drill, what to capture.
-
-| Module | Time | Goal | Drill / Capture |
-|---|---|---|---|
-|**1. Explore the data**| 1:10-1:20 | Ground the agent in the actual schema before building anything | — |
-|**2. App shell**| 1:20-1:40 | Get an empty App deployed and visible **before** Genie/dashboard, so permission errors surface early |**Drill**`apps update --json` → `apps deploy` order — #1 failure if attendees shortcut. ai-dev-kit handles it; reference App at `dab/src/app/` shows the pattern. |
-|**3. Genie space**| 1:40-2:00 | NL Q&A over the 3 pillars |**Capture:** Genie space ID for Module 5 |
-|**4. AI/BI dashboard**| 2:00-2:20 | One widget per pillar, published |**Capture:** Dashboard ID for Module 5 |
-| Break | 2:20-2:30 | | |
-|**5. Integrate + AI + LCE branding**| 2:30-3:10 | Wire dashboard tiles, Ask Genie tab, FMAPI recommendations, LCE colors |**If running long:** drop per-tab embeds onto a single "Overview" tab. Genie + Recommended Actions are higher-impact. |
-|**6. DAB + Job + CI-CD**| 3:10-3:40 | Clone the workshop DAB, repoint at their own assets, add a daily job, deploy | Starter is fully working; attendees customize, not build from scratch. |
-
-### Module 5 reference patterns (if attendees ask)
-
-The reference App in [`dab/src/app/`](../dab/src/app/) already implements all of Module 5. Cribs:
-- **SQL warehouse access:** `lib/deps.get_warehouse_client()` (`databricks-sql-connector` + SDK OAuth)
-- **TTL-cached reads:** `lib/sql_utils.fetch_all()` — 24h cache, one-shot retry on warehouse cold-starts
-- **Lakebase writes:** `lib/deps.get_lakebase_pool()` — per-pool OAuth tokens (Lakebase has no static passwords)
-- **Ask Genie chat panel:** [`routers/genie.py`](../dab/src/app/routers/genie.py) calls the Genie REST API with the user's OBO token (from `X-Forwarded-Access-Token`), threads `conversation_id` for multi-turn, and polls `/messages/{id}` until COMPLETED. The app resource declares `user_api_scopes: [genie, sql, dashboards.genie]` so the forwarded token has the right OAuth scopes. **Common attendee miss:** using the SP token (403 on the user-permissioned space) or rebuilding it as an iframe embed (no multi-turn, no SQL preview).
-- **Per-target config:** `/Workspace/Shared/command-center/config.json` at startup (see `lib/config.py`) — avoids hardcoding catalog/schema/genie_id in `app.yaml`
-
----
-
-### Demo + Wrap (20 min, 3:40-4:00)
-
-- 1 min per attendee: share App URL, show one Genie answer, show one Recommended Action
-- Workshop Teams channel for ongoing questions
-- Optional office hours follow-up 1 week later
-
----
-
 ## Troubleshooting
 
 Sorted by likelihood. Highest-impact items first.
