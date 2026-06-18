@@ -66,10 +66,18 @@ ucode claude
 # 1) Install uv (user scope, no admin)
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
+# Refresh PATH so the new uv is visible in this session
+# (the installer adds it to your user PATH but PowerShell only reads PATH at startup)
+$env:Path = [Environment]::GetEnvironmentVariable("Path", "User") + ";" + [Environment]::GetEnvironmentVariable("Path", "Machine")
+uv --version   # should print a version
+
 # 2) Install Scoop (user-scope package manager), then Node LTS via Scoop
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 irm get.scoop.sh | iex
 scoop install nodejs-lts
+
+# Refresh PATH again (Scoop and Node also updated user PATH)
+$env:Path = [Environment]::GetEnvironmentVariable("Path", "User") + ";" + [Environment]::GetEnvironmentVariable("Path", "Machine")
 node -v   # should print v20.x
 
 # 3) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
@@ -80,7 +88,7 @@ ucode claude
 > ⚠️ **Windows gotchas:**
 > - `curl | sh` from the Unix block WON'T work in PowerShell. Use the `irm | iex` form above.
 > - `winget install OpenJS.NodeJS.LTS` requires admin on most managed laptops — Scoop is user-scope and bypasses that.
-> - After the Node install, **open a new PowerShell window** so the updated user `PATH` takes effect for `npm` / `node` everywhere.
+> - **"uv is not recognized" / "node is not recognized"** right after install: the installer updated your user PATH, but the current PowerShell session was started before that. Run the `$env:Path = ...` refresh shown above, or just close and re-open PowerShell.
 
 **Inside the agent**, paste these one at a time:
 
