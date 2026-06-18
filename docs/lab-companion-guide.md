@@ -55,7 +55,12 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # 2) Install node (macOS via Homebrew; Linux: see nodejs.org)
 brew install node
 
-# 3) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
+# 3) Install Databricks CLI
+brew tap databricks/tap && brew install databricks
+# (Linux without Homebrew: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh)
+databricks --version   # should print v0.281.0 or newer
+
+# 4) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
 uv tool install git+https://github.com/databricks/ucode
 ucode claude
 ```
@@ -80,7 +85,13 @@ scoop install nodejs-lts
 $env:Path = [Environment]::GetEnvironmentVariable("Path", "User") + ";" + [Environment]::GetEnvironmentVariable("Path", "Machine")
 node -v   # should print v20.x
 
-# 3) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
+# 3) Install Databricks CLI via Scoop
+scoop bucket add extras
+scoop install databricks
+$env:Path = [Environment]::GetEnvironmentVariable("Path", "User") + ";" + [Environment]::GetEnvironmentVariable("Path", "Machine")
+databricks --version   # should print v0.281.0 or newer
+
+# 4) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
 uv tool install git+https://github.com/databricks/ucode
 ucode claude
 ```
@@ -88,7 +99,8 @@ ucode claude
 > ⚠️ **Windows gotchas:**
 > - `curl | sh` from the Unix block WON'T work in PowerShell. Use the `irm | iex` form above.
 > - `winget install OpenJS.NodeJS.LTS` requires admin on most managed laptops — Scoop is user-scope and bypasses that.
-> - **"uv is not recognized" / "node is not recognized"** right after install: the installer updated your user PATH, but the current PowerShell session was started before that. Run the `$env:Path = ...` refresh shown above, or just close and re-open PowerShell.
+> - **"uv is not recognized" / "node is not recognized" / "databricks is not recognized"** right after install: the installer updated your user PATH, but the current PowerShell session was started before that. Run the `$env:Path = ...` refresh shown above, or just close and re-open PowerShell.
+> - **"Failed to install/upgrade Databricks CLI automatically"** when you run `ucode claude`: ucode's auto-installer URL 404s on Windows. The explicit Scoop install in step 3 above avoids this — make sure it printed a version before running ucode.
 
 **Inside the agent**, paste these one at a time:
 
@@ -108,6 +120,7 @@ Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims
 
 - [ ] `uv` installed (mac/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh` · Windows PowerShell: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`)
 - [ ] Node installed (macOS: `brew install node` · Windows: `irm get.scoop.sh | iex` then `scoop install nodejs-lts` · Linux: see nodejs.org)
+- [ ] **Databricks CLI** installed (macOS: `brew tap databricks/tap && brew install databricks` · Windows: `scoop bucket add extras && scoop install databricks` · Linux: `curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh`). Confirm with `databricks --version`.
 - [ ] `ucode` installed (`uv tool install git+https://github.com/databricks/ucode`)
 - [ ] Coding agent launched + OAuthed to the workspace (`ucode claude` or `ucode codex`)
 - [ ] `ucode status` shows the workspace + AI Gateway model endpoint
