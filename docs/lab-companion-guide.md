@@ -60,21 +60,27 @@ uv tool install git+https://github.com/databricks/ucode
 ucode claude
 ```
 
-**Windows** (PowerShell — not Command Prompt). Open PowerShell as a regular user, no admin needed:
+**Windows** (PowerShell — not Command Prompt). All steps are user-scope, no admin needed:
 
 ```powershell
-# 1) Install uv
+# 1) Install uv (user scope, no admin)
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-# 2) Install Node (LTS) via winget; or download from nodejs.org
-winget install OpenJS.NodeJS.LTS
+# 2) Install Scoop (user-scope package manager), then Node LTS via Scoop
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+irm get.scoop.sh | iex
+scoop install nodejs-lts
+node -v   # should print v20.x
 
 # 3) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
 uv tool install git+https://github.com/databricks/ucode
 ucode claude
 ```
 
-> ⚠️ **Windows gotcha:** `curl | sh` from the Unix instructions WON'T work in PowerShell — PowerShell has no `sh`. Use the PowerShell `irm | iex` form above.
+> ⚠️ **Windows gotchas:**
+> - `curl | sh` from the Unix block WON'T work in PowerShell. Use the `irm | iex` form above.
+> - `winget install OpenJS.NodeJS.LTS` requires admin on most managed laptops — Scoop is user-scope and bypasses that.
+> - After the Node install, **open a new PowerShell window** so the updated user `PATH` takes effect for `npm` / `node` everywhere.
 
 **Inside the agent**, paste these one at a time:
 
@@ -93,7 +99,7 @@ Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims
 **Checklist — tick each box as you go.** If anything fails, ping the facilitator in the workshop Teams channel **before** the workshop starts.
 
 - [ ] `uv` installed (mac/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh` · Windows PowerShell: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`)
-- [ ] Node installed (macOS: `brew install node` · Windows: `winget install OpenJS.NodeJS.LTS` · Linux: see nodejs.org)
+- [ ] Node installed (macOS: `brew install node` · Windows: `irm get.scoop.sh | iex` then `scoop install nodejs-lts` · Linux: see nodejs.org)
 - [ ] `ucode` installed (`uv tool install git+https://github.com/databricks/ucode`)
 - [ ] Coding agent launched + OAuthed to the workspace (`ucode claude` or `ucode codex`)
 - [ ] `ucode status` shows the workspace + AI Gateway model endpoint
