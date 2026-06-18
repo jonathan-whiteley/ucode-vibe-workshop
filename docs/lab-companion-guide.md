@@ -52,15 +52,18 @@ Skip ahead to the section that matches what you're doing. Each prompt has the fu
 # 1) Install uv (Python package manager)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 2) Install node (macOS via Homebrew; Linux: see nodejs.org)
+# 2) Install Python via uv (user-scope, no admin; uv manages it)
+uv python install 3.11
+
+# 3) Install node (macOS via Homebrew; Linux: see nodejs.org)
 brew install node
 
-# 3) Install Databricks CLI
+# 4) Install Databricks CLI
 brew tap databricks/tap && brew install databricks
 # (Linux without Homebrew: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh)
 databricks --version   # should print v0.281.0 or newer
 
-# 4) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
+# 5) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
 uv tool install git+https://github.com/databricks/ucode
 ucode claude
 ```
@@ -76,7 +79,10 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 $env:Path = [Environment]::GetEnvironmentVariable("Path", "User") + ";" + [Environment]::GetEnvironmentVariable("Path", "Machine")
 uv --version   # should print a version
 
-# 2) Install Scoop (user-scope package manager), then Node LTS via Scoop
+# 2) Install Python via uv (user-scope, no admin; uv manages it)
+uv python install 3.11
+
+# 3) Install Scoop (user-scope package manager), then Node LTS via Scoop
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 irm get.scoop.sh | iex
 scoop install nodejs-lts
@@ -85,13 +91,13 @@ scoop install nodejs-lts
 $env:Path = [Environment]::GetEnvironmentVariable("Path", "User") + ";" + [Environment]::GetEnvironmentVariable("Path", "Machine")
 node -v   # should print v20.x
 
-# 3) Install Databricks CLI via Scoop
+# 4) Install Databricks CLI via Scoop
 scoop bucket add extras
 scoop install databricks
 $env:Path = [Environment]::GetEnvironmentVariable("Path", "User") + ";" + [Environment]::GetEnvironmentVariable("Path", "Machine")
 databricks --version   # should print v0.281.0 or newer
 
-# 4) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
+# 5) Install ucode and launch a coding agent (OAuth into the workspace when prompted)
 uv tool install git+https://github.com/databricks/ucode
 ucode claude
 ```
@@ -119,6 +125,7 @@ Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims
 **Checklist — tick each box as you go.** If anything fails, ping the facilitator in the workshop Teams channel **before** the workshop starts.
 
 - [ ] `uv` installed (mac/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh` · Windows PowerShell: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`)
+- [ ] Python installed via uv: `uv python install 3.11` (no admin needed; uv manages it)
 - [ ] Node installed (macOS: `brew install node` · Windows: `irm get.scoop.sh | iex` then `scoop install nodejs-lts` · Linux: see nodejs.org)
 - [ ] **Databricks CLI** installed (macOS: `brew tap databricks/tap && brew install databricks` · Windows: `scoop bucket add extras && scoop install databricks` · Linux: `curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh`). Confirm with `databricks --version`.
 - [ ] `ucode` installed (`uv tool install git+https://github.com/databricks/ucode`)
