@@ -588,7 +588,7 @@ This is a "daily planner" model — day-part cards you can override, live-updati
 
 _[tool: str_replace_edit]_
 
-This reference is a **forward-looking daily labor *planner*** — the centerpiece is day-part cards (Breakfast/Lunch/Dinner/Late) you can override, with crew + cost + labor-% recomputing live, then "Approve schedule." That's a much richer model than my approve-timecards page. I'll rebuild the Labor view around it, in the Databricks brand (Navy hero, Lava/Yellow/Maroon/Blue day-part themes — not Panda red), keep my Genie assistant, and keep the timecard approvals below it (they drive the badge count). Write-back goes to Lakebase.
+This reference is a **forward-looking daily labor *planner*** — the centerpiece is day-part cards (Breakfast/Lunch/Dinner/Late) you can override, with crew + cost + labor-% recomputing live, then "Approve schedule." That's a much richer model than my approve-timecards page. I'll rebuild the Labor view around it, in the Databricks brand (Navy hero, Lava/Yellow/Maroon/Blue day-part themes — not a brand red), keep my Genie assistant, and keep the timecard approvals below it (they drive the badge count). Write-back goes to Lakebase.
 
 First, add the day-part/role icons to the shell:Now add the schedule-approval state to the host and expose `pushToast`:
 
