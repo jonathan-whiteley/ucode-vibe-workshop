@@ -9,7 +9,7 @@
 
 > A 3-hour workshop where each attendee uses **ucode** + **ai-dev-kit** to build a working Databricks app end-to-end — Databricks App + Genie space + AI/BI dashboard + FMAPI insights + a packaged DAB — all routed through Databricks AI Gateway. **No API keys.**
 
-The reference build is **Command Center**, a store-operations console for a single-store operator. It surfaces analytics and AI insights across three pillars — **Labor**, **Inventory**, and **Guest Feedback** — over an LCE-flavored synthetic dataset. Drop in a different schema and the same format works for any domain.
+The reference build is **Command Center**, a store-operations console for a single-store operator. It surfaces analytics and AI insights across three pillars — **Labor**, **Inventory**, and **Guest Feedback** — over a QSR-flavored synthetic dataset. Drop in a different schema and the same format works for any domain.
 
 ---
 
@@ -22,7 +22,7 @@ The reference build is **Command Center**, a store-operations console for a sing
 | **Pre-work** | 30 min async (ucode + IDE + ai-dev-kit) |
 | **Modules** | 6 modules: Explore → App shell → Genie → Dashboard → Integrate → DAB |
 | **Stack** | Databricks Apps · AppKit · Genie · AI/BI Dashboards · Lakebase · DABs · FMAPI |
-| **Default brand** | Little Caesars (swap via `company` config in the data generator) |
+| **Default brand** | Sample QSR (swap via `company` config in the data generator) |
 
 ---
 
@@ -80,11 +80,11 @@ ucode-vibe-workshop/
 ├── data/                              📊 Synthetic data
 │   ├── README.md
 │   ├── ddl.sql                        # CREATE TABLE statements for the 8 workshop tables
-│   ├── generate_data.py               # Faker + Databricks Connect; --company lce | qsr_mexican
+│   ├── generate_data.py               # Faker + Databricks Connect; --company sample_qsr | qsr_mexican
 │   └── requirements.txt
 │
 ├── dab/                               🚀 Facilitator's deployable bundle
-│   ├── databricks.yml                 # Targets: dev (jdub_demo), lce (ioc_sandbox)
+│   ├── databricks.yml                 # Targets: dev (jdub_demo), prod
 │   ├── resources/                     # job · lakebase · dashboard · app YAMLs
 │   └── src/
 │       ├── notebooks/                 # 3 setup tasks: gen data · init Lakebase · create Genie
@@ -98,18 +98,18 @@ ucode-vibe-workshop/
 ├── app/
 │   └── reference-prototype/           # 🎨 Homebase design source of truth (standalone, mock data)
 │
-└── branding/lce/                      # 🍕 Opt-in LCE branding (logo, favicon, palette guide)
+└── branding/example/                  # 🍕 Opt-in example branding (logo, favicon, palette guide)
 ```
 
 ---
 
 ## Reference schema (8 tables)
 
-3 dims + 5 facts under `ioc_sandbox.vibe_workshop` (dev mirror: `jdub_demo.vibe_workshop`):
+3 dims + 5 facts under a Unity Catalog schema (dev example: `jdub_demo.vibe_workshop`):
 
 | Table | Grain | Rows | Purpose |
 |---|---|---|---|
-| `dims_stores` | store | 20 | 20 real LCE-presence locations (Detroit, Chicago, Houston, …) |
+| `dims_stores` | store | 20 | 20 sample store locations (Detroit, Chicago, Houston, …) |
 | `dims_items` | sku | 50 | Pizza ingredients, beverages, packaging |
 | `dims_employees` | employee | ~240 | ~12 per store (cook / cashier / lead / manager) |
 | `facts_sales_daypart` | date × store × daypart | 4,800 | Revenue + traffic, actual + forecast |
@@ -118,7 +118,7 @@ ucode-vibe-workshop/
 | `facts_purchase_orders` | po line | ~250 | Pre-staged POs with vendor info |
 | `facts_customer_feedback` | feedback | 1,000 | Reviews with pre-staged `sentiment_label`, `theme`, `ai_drafted_reply` |
 
-60 days of history, anchored to **2026-06-22**. Item catalog + store roster driven by a `company` config in the generator — defaults to `lce`. Add a new entry in `COMPANY_CONFIGS` to re-skin for another customer.
+60 days of history, anchored to **2026-06-22**. Item catalog + store roster driven by a `company` config in the generator — defaults to `sample_qsr`. Add a new entry in `COMPANY_CONFIGS` to re-skin for another customer.
 
 Column-level detail: [`data/README.md`](data/README.md).
 

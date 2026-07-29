@@ -1,6 +1,6 @@
 # Workshop Data
 
-**8 tables** under `ioc_sandbox.vibe_workshop` (dev: `jdub_demo.vibe_workshop`). 3 dims + 5 facts. Every chart and AI insight in the Homebase design has a backing column or table; nothing is left to be computed at runtime via on-the-fly AI calls.
+**8 tables** under a Unity Catalog schema (e.g., `jdub_demo.vibe_workshop`). 3 dims + 5 facts. Every chart and AI insight in the Homebase design has a backing column or table; nothing is left to be computed at runtime via on-the-fly AI calls.
 
 ## Volume targets
 
@@ -127,7 +127,7 @@ CLI flags: `--stores`, `--items`, `--days`, `--feedback`, `--seed`.
 After generation, grant the attendee group `SELECT` on all 8 tables and `USE CATALOG` / `USE SCHEMA`:
 
 ```sql
-GRANT USE CATALOG ON CATALOG ioc_sandbox TO `<attendee_group>`;
-GRANT USE SCHEMA ON SCHEMA ioc_sandbox.vibe_workshop TO `<attendee_group>`;
-GRANT SELECT ON SCHEMA ioc_sandbox.vibe_workshop TO `<attendee_group>`;
+GRANT USE CATALOG ON CATALOG <catalog> TO `<attendee_group>`;
+GRANT USE SCHEMA ON SCHEMA <catalog>.vibe_workshop TO `<attendee_group>`;
+GRANT SELECT ON SCHEMA <catalog>.vibe_workshop TO `<attendee_group>`;
 ```

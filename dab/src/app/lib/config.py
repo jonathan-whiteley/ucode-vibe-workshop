@@ -30,7 +30,7 @@ CONFIG_PATH = "/Workspace/Shared/command-center/config.json"
 class Settings(BaseModel):
     databricks_host: str = ""
     warehouse_id: str = ""
-    catalog: str = "ioc_sandbox"
+    catalog: str = "jdub_demo"
     schema_name: str = "vibe_workshop"
     lakebase_host: str = ""
     lakebase_db: str = "databricks_postgres"
@@ -70,7 +70,7 @@ def get_settings() -> Settings:
     return Settings(
         databricks_host=os.getenv("DATABRICKS_HOST", ""),
         warehouse_id=ws_cfg.get("warehouse_id") or os.getenv("DATABRICKS_WAREHOUSE_ID", ""),
-        catalog=ws_cfg.get("catalog") or os.getenv("CC_CATALOG", "ioc_sandbox"),
+        catalog=ws_cfg.get("catalog") or os.getenv("CC_CATALOG", "jdub_demo"),
         schema_name=ws_cfg.get("schema") or os.getenv("CC_SCHEMA", "vibe_workshop"),
         lakebase_host=os.getenv("LAKEBASE_HOST") or os.getenv("PGHOST", ""),
         lakebase_db=os.getenv("LAKEBASE_DB") or os.getenv("PGDATABASE", "databricks_postgres"),

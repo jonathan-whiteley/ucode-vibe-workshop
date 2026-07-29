@@ -1,12 +1,13 @@
 -- ucode Vibe Coding Workshop: Operator Command Center schema
--- Target: ioc_sandbox.vibe_workshop  (dev: jdub_demo.vibe_workshop)
+-- Target: Unity Catalog schema (e.g., jdub_demo.vibe_workshop)
 --
 -- 8 tables (3 dims + 5 facts). Every chart and AI insight in the design has a
 -- backing column or table; nothing is computed via on-the-fly AI calls. SQL
 -- rollups are still expected (e.g. daily sentiment timeline is GROUP BY on
 -- sentiment_label).
 
-USE CATALOG ioc_sandbox;
+-- Replace 'jdub_demo' with your catalog name
+USE CATALOG jdub_demo;
 CREATE SCHEMA IF NOT EXISTS vibe_workshop;
 USE SCHEMA vibe_workshop;
 

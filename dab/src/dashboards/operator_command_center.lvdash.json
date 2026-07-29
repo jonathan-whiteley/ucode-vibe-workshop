@@ -15,7 +15,7 @@
         "  (SELECT ROUND(AVG(rating), 2) FROM identifier(:catalog || '.' || :schema || '.facts_customer_feedback') WHERE date >= (SELECT d FROM latest) - 7) AS avg_rating"
       ],
       "parameters": [
-        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "jdub_demo"}]}}},
         {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
       ]
     },
@@ -31,7 +31,7 @@
         "ORDER BY sd.date"
       ],
       "parameters": [
-        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "jdub_demo"}]}}},
         {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
       ]
     },
@@ -54,7 +54,7 @@
         "ORDER BY CASE daypart WHEN 'breakfast' THEN 1 WHEN 'lunch' THEN 2 WHEN 'dinner' THEN 3 WHEN 'late' THEN 4 END, series"
       ],
       "parameters": [
-        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "jdub_demo"}]}}},
         {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
       ]
     },
@@ -79,7 +79,7 @@
         "ORDER BY category, status"
       ],
       "parameters": [
-        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "jdub_demo"}]}}},
         {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
       ]
     },
@@ -105,7 +105,7 @@
         "ORDER BY feedback_date, sentiment"
       ],
       "parameters": [
-        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "ioc_sandbox"}]}}},
+        {"keyword": "catalog", "displayName": "catalog", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "jdub_demo"}]}}},
         {"keyword": "schema", "displayName": "schema", "dataType": "STRING", "defaultSelection": {"values": {"dataType": "STRING", "values": [{"value": "vibe_workshop"}]}}}
       ]
     }

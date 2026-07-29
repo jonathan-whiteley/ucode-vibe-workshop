@@ -20,7 +20,7 @@ env:
   # Bootstrap defaults — overridden once the setup job writes the workspace
   # config file. Restart the App after `bundle run command_center_setup`.
   - name: CC_CATALOG
-    value: "ioc_sandbox"
+    value: "jdub_demo"
   - name: CC_SCHEMA
     value: "vibe_workshop"
   - name: ANCHOR_DATE

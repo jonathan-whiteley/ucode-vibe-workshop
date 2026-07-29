@@ -1,7 +1,7 @@
 # Databricks Asset Bundle for the ucode Vibe Coding Workshop.
 #
 # This bundle is for the FACILITATOR to run once in the target workspace
-# (dev or LCE prod) to set up:
+# (dev or prod) to set up:
 #   - Setup job (synthetic data generation + Genie space + Lakebase DDL)
 #   - Lakebase instance for write-back (shared across all attendees)
 #   - Reference AI/BI dashboard (one per facilitator)
@@ -20,12 +20,12 @@ include:
 variables:
   catalog:
     description: "Unity Catalog catalog where workshop data lives"
-    default: "ioc_sandbox"
+    default: "jdub_demo"
   schema:
     description: "Schema for the 8-table workshop dataset"
     default: "vibe_workshop"
   warehouse_id:
-    description: "SQL warehouse used by the job, dashboard, and app. Default lookup name 'serverless' matches the LCE workshop warehouse; override with --var warehouse_id=<id> for other workspaces."
+    description: "SQL warehouse used by the job, dashboard, and app. Default lookup name 'serverless' matches the workshop warehouse; override with --var warehouse_id=<id> for other workspaces."
     lookup:
       warehouse: "serverless"
   fmapi_endpoint:
@@ -42,7 +42,7 @@ variables:
     default: "command-center-lakebase"
   company:
     description: "Company config to drive synthetic data (item catalog, store locations, review language). See COMPANY_CONFIGS in 01_generate_data.py for valid keys."
-    default: "lce"
+    default: "sample_qsr"
 
 targets:
   dev:
@@ -57,12 +57,12 @@ targets:
       catalog: "jdub_demo"
       schema: "vibe_workshop"
 
-  lce:
+  prod:
     mode: production
     workspace:
-      profile: lce
+      profile: prod
     variables:
-      catalog: "ioc_sandbox"
+      catalog: "jdub_demo"
       schema: "vibe_workshop"
 
   e2demo:
