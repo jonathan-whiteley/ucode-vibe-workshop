@@ -11,7 +11,7 @@
 # MAGIC (proto schema v2, sorted ids for stable diffs).
 
 # COMMAND ----------
-dbutils.widgets.text("catalog", "ioc_sandbox")
+dbutils.widgets.text("catalog", "jdub_demo")
 dbutils.widgets.text("schema", "vibe_workshop")
 dbutils.widgets.text("warehouse_id", "")
 dbutils.widgets.text("space_id", "")

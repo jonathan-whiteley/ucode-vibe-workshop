@@ -2,8 +2,8 @@
 # and creates the reference Genie space. The facilitator runs this once per
 # target environment before the workshop.
 #
-#   databricks bundle deploy -t lce
-#   databricks bundle run command_center_setup -t lce
+#   databricks bundle deploy -t prod
+#   databricks bundle run command_center_setup -t prod
 
 resources:
   jobs:

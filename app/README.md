@@ -10,7 +10,7 @@ This folder will hold the **facilitator's reference solution** App that demos wh
 - AppKit shell with 3 tabs (Labor, Sales & Inventory, Sentiment) + an "Ask Genie" tab
 - Embedded Genie space and AI/BI dashboard
 - "Recommended Actions" sidebar driven by `ai_query()` and `<FMAPI_ENDPOINT>`
-- LCE branding (logo, primary color, dark navbar)
+- Example branding (logo, primary color, dark navbar)
 
 ## How to build
 

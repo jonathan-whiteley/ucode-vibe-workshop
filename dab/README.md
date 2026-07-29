@@ -16,7 +16,7 @@ This is the **facilitator's** one-shot bundle. Deploy it in the target workspace
 ## Prereqs
 
 - Databricks CLI ≥ 0.281.0
-- A profile for each target (`DEFAULT` for dev, `lce` for production)
+- A profile for each target (`DEFAULT` for dev, `prod` for production)
 - The deploying user must be a **workspace admin** (or have permission to create Lakebase instances). If you aren't, see "Lakebase binding fallback" below.
 - A SQL warehouse named `Serverless Starter Warehouse` (override with `--var warehouse_id=<id>` if your warehouse has a different name)
 
@@ -50,13 +50,13 @@ databricks bundle run command_center_setup -t <target>
 databricks bundle run command_center_app -t <target>
 ```
 
-For the LCE target specifically:
+For the prod target specifically:
 
 ```bash
-python3 scripts/bootstrap.py --profile lce --warehouse-id <id> --catalog ioc_sandbox
-databricks bundle deploy -t lce --var warehouse_id=<id>
-databricks bundle run command_center_setup -t lce
-databricks bundle run command_center_app -t lce
+python3 scripts/bootstrap.py --profile prod --warehouse-id <id> --catalog <catalog>
+databricks bundle deploy -t prod --var warehouse_id=<id>
+databricks bundle run command_center_setup -t prod
+databricks bundle run command_center_app -t prod
 ```
 
 ### Why this order matters
@@ -77,34 +77,26 @@ Override at deploy time with `--var <key>=<value>`:
 
 | Variable | Default | Notes |
 |---|---|---|
-| `catalog` | `ioc_sandbox` (lce) / `jdub_demo` (dev) | UC catalog where the 8 workshop tables land |
+| `catalog` | `jdub_demo` | UC catalog where the 8 workshop tables land |
 | `schema` | `vibe_workshop` | UC schema |
 | `warehouse_id` | looked up by name | Override with the warehouse ID if the lookup name doesn't match |
 | `fmapi_endpoint` | `databricks-claude-sonnet-4-6` | Foundation Model API endpoint for `ai_query()` calls |
 | `data_end_date` | `2026-06-22` | Latest date in the synthetic data; anchors `current_date()`-style queries |
 | `attendee_group` | `users` | Workspace group that gets SELECT on tables + CAN_USE on the App |
-| `company` | `lce` | Brand config for synthetic data (lce / qsr_mexican); see `data/generate_data.py` |
+| `company` | `sample_qsr` | Brand config for synthetic data (sample_qsr / qsr_mexican); see `data/generate_data.py` |
 
 ## App env vars (in `src/app/app.yaml`)
 
-The reference App reads catalog/schema/Lakebase from env. DAB does NOT substitute `${var.*}` in `app.yaml` source files, so:
-
-- **Dev** uses the hardcoded values in `app.yaml` (`CC_CATALOG=jdub_demo`).
-- **lce** needs a post-deploy override:
-  ```bash
-  databricks apps update command-center-lce --no-compute \
-    --json '{"resources":[...],"env":[{"name":"CC_CATALOG","value":"ioc_sandbox"}, ...]}'
-  ```
-  Or hand-edit `dab/src/app/app.yaml` before the lce deploy. (Future: lift this into a per-target `presets` block.)
+The reference App reads catalog/schema/Lakebase from env. DAB does NOT substitute `${var.*}` in `app.yaml` source files, so values must be explicitly set in `app.yaml` before deployment.
 
 ## Layout
 
 ```
 dab/
-├── databricks.yml             # bundle config + targets (dev / lce)
+├── databricks.yml             # bundle config + targets (dev / prod)
 ├── resources/
 │   ├── job.yml                # setup job (3 sequential tasks, serverless notebooks)
-│   ├── lakebase.yml           # database_instances resource (lce-only)
+│   ├── lakebase.yml           # database_instances resource
 │   ├── dashboard.yml          # Lakeview dashboard resource
 │   └── app.yml                # apps resource w/ warehouse + Lakebase + 8 table bindings
 └── src/
@@ -161,7 +153,7 @@ Rarely-hit workspace-level limits worth knowing about:
 If `bundle deploy` fails on the `database_instances` resource with a permission error, you're not a workspace admin. Two workarounds:
 
 1. Have an admin create `command-center-lakebase` in the workspace UI (Compute → Database instances → Create). Then redeploy the bundle — it'll see the existing instance.
-2. Or comment out `resources/lakebase.yml` (move the instance definition out of the lce target in `databricks.yml`), deploy the rest, and provision the Lakebase manually. The `02_init_lakebase` notebook still creates the tables once the instance exists.
+2. Or comment out `resources/lakebase.yml` (move the instance definition out of the prod target in `databricks.yml`), deploy the rest, and provision the Lakebase manually. The `02_init_lakebase` notebook still creates the tables once the instance exists.
 
 ## Refreshing the static App copy
 
@@ -178,8 +170,8 @@ cp -R ../app/reference-prototype/app src/app/static/
 cp -R ../app/reference-prototype/assets src/app/static/
 cp -R ../app/reference-prototype/fonts src/app/static/
 
-databricks bundle deploy -t lce
-databricks bundle run command_center_app -t lce
+databricks bundle deploy -t prod
+databricks bundle run command_center_app -t prod
 ```
 
 ## Tearing it down
@@ -188,14 +180,14 @@ For a full post-workshop sweep (Lakebase + UC schema + attendee-built Apps / Gen
 
 ```bash
 # DRY RUN — see what matches the workshop's naming patterns
-python3 scripts/cleanup.py --profile lce --catalog ioc_sandbox
+python3 scripts/cleanup.py --profile prod --catalog <catalog>
 
 # APPLY — delete everything matching
-python3 scripts/cleanup.py --profile lce --catalog ioc_sandbox \
+python3 scripts/cleanup.py --profile prod --catalog <catalog> \
     --warehouse-id <id> --apply
 
 # Then drop the bundle-owned facilitator resources
-databricks bundle destroy -t lce --auto-approve
+databricks bundle destroy -t prod --auto-approve
 ```
 
 Flags you may want:

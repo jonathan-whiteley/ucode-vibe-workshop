@@ -15,13 +15,13 @@ pass --apply to actually destroy.
 Typical workshop wind-down (24-48h after the workshop ends):
 
     # 1. See what would be deleted
-    python3 dab/scripts/cleanup.py --profile lce --catalog ioc_sandbox
+    python3 dab/scripts/cleanup.py --profile prod --catalog <catalog>
 
     # 2. Actually delete
-    python3 dab/scripts/cleanup.py --profile lce --catalog ioc_sandbox --apply
+    python3 dab/scripts/cleanup.py --profile prod --catalog <catalog> --apply
 
     # 3. (optional) Drop the bundle-owned resources too
-    databricks bundle destroy -t lce --auto-approve
+    databricks bundle destroy -t prod --auto-approve
 
 What it cleans up (anything matching the patterns below):
   - Apps named `*-command-center` or `command-center-*`
@@ -105,7 +105,7 @@ DASH_PAT = re.compile(r"(.+ Operator Insights|command_center_.+)$")
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--profile", required=True, help="Databricks CLI profile (e.g. lce)")
+    ap.add_argument("--profile", required=True, help="Databricks CLI profile")
     ap.add_argument("--catalog", required=True, help="UC catalog containing the workshop schema")
     ap.add_argument("--schema", default="vibe_workshop", help="UC schema to drop (default: vibe_workshop)")
     ap.add_argument("--warehouse-id", help="SQL warehouse ID (required when --apply drops the schema)")
@@ -122,7 +122,7 @@ def main() -> None:
     print(f"=== Workshop cleanup [{mode}] · profile={profile} catalog={args.catalog} ===\n")
 
     if args.keep_reference:
-        reference_app = {"command-center-lce", "command-center-dev", "command-center-azure", "command-center-e2demo"}
+        reference_app = {"command-center-prod", "command-center-dev", "command-center-azure", "command-center-e2demo"}
         reference_genie = {"Command Center reference"}
         reference_dash = {"command_center_dash"}
     else:

@@ -16,7 +16,7 @@
 dbutils.library.restartPython()
 
 # COMMAND ----------
-dbutils.widgets.text("catalog", "ioc_sandbox")
+dbutils.widgets.text("catalog", "jdub_demo")
 dbutils.widgets.text("schema", "vibe_workshop")
 dbutils.widgets.text("end_date", "2026-06-22")
 dbutils.widgets.text("days", "60")
@@ -25,7 +25,7 @@ dbutils.widgets.text("items", "50")
 dbutils.widgets.text("feedback", "1000")
 dbutils.widgets.text("seed", "42")
 dbutils.widgets.text("attendee_group", "users")
-dbutils.widgets.text("company", "lce")
+dbutils.widgets.text("company", "sample_qsr")
 
 CATALOG = dbutils.widgets.get("catalog")
 SCHEMA = dbutils.widgets.get("schema")
@@ -60,8 +60,8 @@ spark.sql(f"USE SCHEMA {SCHEMA}")
 
 # COMMAND ----------
 COMPANY_CONFIGS = {
-    "lce": {
-        "brand": "Little Caesars",
+    "sample_qsr": {
+        "brand": "Sample QSR",
         "store_locations": [
             ("Detroit", "MI", "Greenfield Rd"),
             ("Detroit", "MI", "8 Mile"),
@@ -87,52 +87,52 @@ COMPANY_CONFIGS = {
         "store_sqft_range": (1200, 2800),
         "categories": ["meat", "veggie", "bread_cheese", "pantry", "beverage"],
         "vendor_by_category": {
-            "meat":          ("Detroit Meat Co.", 2),
+            "meat":          ("Midwest Meat Co.", 2),
             "veggie":        ("Midwest Produce", 1),
-            "bread_cheese":  ("Wayne Dough Supply", 3),
-            "pantry":        ("Commissary Direct", 3),
+            "bread_cheese":  ("Regional Dough Supply", 3),
+            "pantry":        ("National Commissary", 3),
             "beverage":      ("PepsiCo Foodservice", 2),
         },
         "item_names": {
             "meat":         ["Pepperoni (5lb)", "Italian Sausage (5lb)", "Beef Topping (5lb)", "Bacon Crumbles (3lb)", "Ham (5lb)", "Chicken Wings (10lb)", "Canadian Bacon (3lb)"],
             "veggie":       ["Mushrooms (#10 can)", "Green Peppers (case)", "Banana Peppers (5gal)", "Black Olives (#10 can)", "Yellow Onions (50lb)", "Jalapenos (1gal)", "Pineapple (case)"],
-            "bread_cheese": ["Dough Balls (case)", "Mozzarella (10lb)", "Parmesan (5lb)", "Crazy Bread Mix (case)", "Italian Cheese Blend (10lb)", "Stuffed Crust Cheese (5lb)", "Garlic Knot Mix (case)"],
-            "pantry":       ["Pizza Sauce (#10 can)", "Crazy Sauce (case)", "Garlic Butter (5gal)", "Ranch Dip (case)", "Pizza Boxes (medium)", "Pizza Boxes (large)", "To-go Bags", "Buffalo Wing Sauce (1gal)", "BBQ Wing Sauce (1gal)"],
+            "bread_cheese": ["Dough Balls (case)", "Mozzarella (10lb)", "Parmesan (5lb)", "Garlic Bread Mix (case)", "Italian Cheese Blend (10lb)", "Premium Cheese Blend (5lb)", "Garlic Knot Mix (case)"],
+            "pantry":       ["Pizza Sauce (#10 can)", "Garlic Sauce (case)", "Garlic Butter (5gal)", "Ranch Dip (case)", "Pizza Boxes (medium)", "Pizza Boxes (large)", "To-go Bags", "Buffalo Wing Sauce (1gal)", "BBQ Wing Sauce (1gal)"],
             "beverage":     ["Pepsi Syrup (BIB)", "Diet Pepsi (BIB)", "Mountain Dew (BIB)", "Aquafina (case)", "Tropicana OJ (case)", "Lipton Iced Tea (BIB)"],
         },
         "review_templates": {
             "pickup_wait":    [
-                "Hot-N-Ready was anything but ready at {city}. Waited {n} min.",
-                "Friday pickup at {city} was slow. Pizza was lukewarm by the time I got home.",
+                "Order pickup at {city} took longer than expected. Waited {n} min.",
+                "Friday pickup at {city} was slow. Food was a bit cool by the time I got home.",
                 "Online order said ready but waited {n} min at the {city} window.",
             ],
             "stockout":       [
-                "{city} was out of Crazy Bread again. Second time this month.",
-                "Sold out of pepperoni by 6pm at {city}. Lame.",
-                "No Stuffed Crust available at {city}. Had to get classic.",
+                "{city} was out of garlic bread again. Second time this month.",
+                "Sold out of pepperoni by 6pm at {city}. Disappointing.",
+                "No specialty bread available at {city}. Had to get classic.",
             ],
             "friendly_staff": [
                 "Manager at {city} remembered my order. Solid crew.",
-                "Cashier at {city} hooked us up with extra Crazy Sauce. Awesome.",
+                "Cashier at {city} was helpful with sauce options. Awesome.",
                 "Staff at {city} always upbeat and quick. Keeps me coming back.",
             ],
             "freshness":      [
                 "Pizza at {city} was hot and fresh, exactly what I wanted.",
-                "Crazy Bread at {city} was straight out of the oven. Perfect.",
-                "Cheese was bubbly and crust crispy at {city}. Best pizza in town.",
+                "Garlic bread at {city} was straight out of the oven. Perfect.",
+                "Cheese was bubbly and crust crispy at {city}. Best in town.",
             ],
             "value":          [
-                "Five bucks for a pizza at {city} still wins. Can't beat it.",
+                "Great value for pizza at {city}. Can't beat the pricing.",
                 "Family deal at {city} was a great value. Fed everyone.",
                 "Lunch combo at {city} hit the spot. Worth the money.",
             ],
             "other":          [
-                "Quick visit at {city}. Got my Hot-N-Ready and left. Standard.",
+                "Quick visit at {city}. Got my order and left. Standard.",
                 "Stopped at {city} on a road trip. Pizza was decent.",
                 "{city} location is clean and easy parking.",
             ],
         },
-        "reply_brand_phrase": "Our team",
+        "reply_brand_phrase": "our team",
     },
     "qsr_mexican": {
         "brand": "QSR Mexican",

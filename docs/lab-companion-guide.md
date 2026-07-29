@@ -1,4 +1,4 @@
-# LCE Workshop: Operator Command Center: Lab Companion Guide
+# QSR Workshop: Operator Command Center: Lab Companion Guide
 
 **You'll build:** "Command Center", a Databricks App that surfaces AI insights and analytics across **Labor, Inventory, and Guest Feedback** for store operations. Your app will embed a Genie space, an AI/BI dashboard, and an FMAPI-powered "Recommended Actions" panel, all packaged as a Databricks Asset Bundle with a multi-task Job.
 
@@ -9,7 +9,7 @@
 - **Workshop repo:** [github.com/jonathan-whiteley/ucode-vibe-workshop](https://github.com/jonathan-whiteley/ucode-vibe-workshop)
 - **ucode:** [github.com/databricks/ucode](https://github.com/databricks/ucode)
 - **ai-dev-kit:** [github.com/databricks-solutions/ai-dev-kit](https://github.com/databricks-solutions/ai-dev-kit/tree/main)
-- **Workspace:** [adb-30827331698809.9.azuredatabricks.net](https://adb-30827331698809.9.azuredatabricks.net) (lce-analytics-dev-adb)
+- **Workspace:** Your workshop workspace URL (provided by facilitator)
 
 ---
 
@@ -24,7 +24,7 @@
 | 1:40-2:00 | Module 3: Genie space | Natural-language Q&A over 3 pillars |
 | 2:00-2:20 | Module 4: AI/BI dashboard | Widgets per pillar |
 | 2:20-2:30 | Break | |
-| 2:30-3:10 | Module 5: Integrate + AI + branding | Genie + dashboard + AI recommendations + LCE colors |
+| 2:30-3:10 | Module 5: Integrate + AI + branding | Genie + dashboard + AI recommendations + custom colors |
 | 3:10-3:40 | Module 6: DAB + Job + CI-CD | Bundle deployed, job running |
 | 3:40-4:00 | Demo round + wrap | Share your App URL |
 
@@ -119,7 +119,7 @@ Configure my MCP servers. Add Databricks SQL and the Managed Databricks MCPs.
 ```
 
 ```text
-Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims_* and 5 facts_*).
+Smoke test: list the tables in <catalog>.vibe_workshop. I should see 8 (3 dims_* and 5 facts_*).
 ```
 
 **Checklist — tick each box as you go.** If anything fails, ping the facilitator in the workshop Teams channel **before** the workshop starts.
@@ -133,7 +133,7 @@ Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims
 - [ ] `ucode status` shows the workspace + AI Gateway model endpoint
 - [ ] MCP servers added: Databricks SQL + Managed Databricks MCPs
 - [ ] ai-dev-kit skills loaded
-- [ ] Smoke test passed: agent lists 8 tables in `ioc_sandbox.vibe_workshop` (3 `dims_*`, 5 `facts_*`)
+- [ ] Smoke test passed: agent lists 8 tables in `<catalog>.vibe_workshop` (3 `dims_*`, 5 `facts_*`)
 
 ### 🚀 Day-of prompts (run these in the workshop, in order)
 
@@ -142,12 +142,12 @@ Smoke test: list the tables in ioc_sandbox.vibe_workshop. I should see 8 (3 dims
 Substitute `<INITIALS>` once, paste, hit enter. Your agent will use these values for every prompt below — no more find-and-replace.
 
 ```text
-I'm running the LCE ucode workshop. Set up session context using
+I'm running the ucode workshop. Set up session context using
 these values and remember them throughout this conversation:
 
   My initials:  <INITIALS>   (← replace with yours, e.g. jjw)
-  Workspace:    adb-30827331698809.9.azuredatabricks.net
-  Catalog:      ioc_sandbox.vibe_workshop
+  Workspace:    <workspace-url>   (← replace with your workshop URL)
+  Catalog:      <catalog>   (← replace with your catalog, e.g. jdub_demo)
   Warehouse:    serverless
   Model endpt:  databricks-claude-sonnet-4-6
                   (use for BOTH ai_query() AND the AI Gateway route)
@@ -275,11 +275,11 @@ Let users pick a store from a dropdown.
 ```
 
 ```text
-Apply LCE branding from branding/lce/ in the workshop repo:
-  - logo at branding/lce/logo.svg
-  - primary color #FF671B
+Apply custom branding from branding/example/ in the workshop repo:
+  - logo at branding/example/logo.svg
+  - primary color from branding/example/README.md
   - dark navbar
-  - page title "Command Center | LCE"
+  - page title "Command Center"
 
 Redeploy my app.
 ```
@@ -319,13 +319,13 @@ Pre-filled values used throughout the workshop. The **⭐ Session setup** prompt
 | Item | Your value |
 |---|---|
 | Your initials (lowercase, e.g. `jjw`) | `<INITIALS>` ← **you fill this in** |
-| Workspace URL | `https://adb-30827331698809.9.azuredatabricks.net` (lce-analytics-dev-adb) |
-| Shared data catalog.schema | `ioc_sandbox.vibe_workshop` |
+| Workspace URL | `<workspace-url>` ← **provided by facilitator** |
+| Shared data catalog.schema | `<catalog>.vibe_workshop` ← **provided by facilitator** |
 | Shared Lakebase instance | `command-center-lakebase` |
 | SQL warehouse name | `serverless` |
 | AI Gateway model endpoint (for `ucode codex`) | `databricks-claude-sonnet-4-6` |
 | FMAPI endpoint (for `ai_query()`) | `databricks-claude-sonnet-4-6` (same as above) |
-| LCE branding folder (in repo) | `branding/lce/` |
+| Example branding folder (in repo) | `branding/example/` |
 | **Captured during workshop:** | |
 | Your Genie space ID | `<GENIE_SPACE_ID>` |
 | Your dashboard ID | `<DASHBOARD_ID>` |

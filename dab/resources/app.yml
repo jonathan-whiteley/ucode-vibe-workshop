@@ -3,8 +3,8 @@
 # see the finished app at the start of the workshop.
 #
 # After `bundle deploy`, you must `bundle run` to actually start the app:
-#   databricks bundle deploy -t lce
-#   databricks bundle run command_center_app -t lce
+#   databricks bundle deploy -t prod
+#   databricks bundle run command_center_app -t prod
 #
 # Resources (SQL warehouse, UC tables, Lakebase) are granted to the App's
 # service principal via the resources block here. If you change them after

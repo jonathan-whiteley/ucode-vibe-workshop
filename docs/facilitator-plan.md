@@ -1,7 +1,7 @@
-# LCE Workshop: Operator Command Center: Facilitator Plan
+# QSR Workshop: Operator Command Center: Facilitator Plan
 
 **Workshop:** Build an AI-powered Command Center using vibe coding agents (UCode + Claude Code / Codex) routed through Databricks AI Gateway.
-**Audience:** LCE engineers and analysts (8-15 attendees recommended).
+**Audience:** Workshop engineers and analysts (8-15 attendees recommended).
 **Duration:** 3 hours, 1:00-4:00 PM ET.
 **End state:** Each attendee has their own deployed Databricks App that surfaces a Genie space, an AI/BI dashboard, and FMAPI-driven recommendations across three operational pillars: **Labor, Inventory, Guest Feedback**. Everything is packaged as a Databricks Asset Bundle.
 
@@ -10,8 +10,8 @@
 - **Workshop repo:** [github.com/jonathan-whiteley/ucode-vibe-workshop](https://github.com/jonathan-whiteley/ucode-vibe-workshop)
 - **ucode:** [github.com/databricks/ucode](https://github.com/databricks/ucode)
 - **ai-dev-kit:** [github.com/databricks-solutions/ai-dev-kit](https://github.com/databricks-solutions/ai-dev-kit/tree/main)
-- **LCE workspace:** [adb-30827331698809.9.azuredatabricks.net](https://adb-30827331698809.9.azuredatabricks.net) (lce-analytics-dev-adb)
-- **Catalog.schema:** `ioc_sandbox.vibe_workshop`
+- **Workshop workspace:** Replace with your workspace URL
+- **Catalog.schema:** `jdub_demo.vibe_workshop`
 
 ---
 
@@ -26,7 +26,7 @@
 | 1:40-2:00 | Module 3: Genie space | Natural-language Q&A over 3 pillars |
 | 2:00-2:20 | Module 4: AI/BI dashboard | Widgets per pillar |
 | 2:20-2:30 | Break | |
-| 2:30-3:10 | Module 5: Integrate + AI + branding | Genie + dashboard + AI recommendations + LCE colors |
+| 2:30-3:10 | Module 5: Integrate + AI + branding | Genie + dashboard + AI recommendations + custom colors |
 | 3:10-3:40 | Module 6: DAB + Job + CI-CD | Bundle deployed, job running |
 | 3:40-4:00 | Demo round + wrap | Share your App URL |
 
@@ -38,7 +38,7 @@
 
 ### T-1 week: features + permissions + deploy
 
-#### Features the LCE admin must enable
+#### Features the admin must enable
 
 | Feature | Why |
 |---|---|
@@ -47,13 +47,13 @@
 | **Foundation Model API + AI Gateway** → `databricks-claude-sonnet-4-6` | Single endpoint serves both `ai_query()` in the app AND the AI Gateway route for `ucode codex`. Confirm the endpoint exists and the attendee group has `CAN_USE`. |
 | **Lakebase**(Postgres preview) | Write-back persistence (release POs, replies, schedule approvals) |
 
->**Why one model endpoint:** the attendee guide pre-fills both `<MODEL_ENDPOINT>` (AI Gateway → `ucode codex`) and `<FMAPI_ENDPOINT>` (`ai_query()` in the app) as `databricks-claude-sonnet-4-6` so attendees only see one name. If LCE prefers a different route, override with `--var fmapi_endpoint=<name>` at deploy time and update the env table in `docs/lab-companion-guide.md` to match.
+>**Why one model endpoint:** the attendee guide pre-fills both `<MODEL_ENDPOINT>` (AI Gateway → `ucode codex`) and `<FMAPI_ENDPOINT>` (`ai_query()` in the app) as `databricks-claude-sonnet-4-6` so attendees only see one name. If you prefer a different route, override with `--var fmapi_endpoint=<name>` at deploy time and update the env table in `docs/lab-companion-guide.md` to match.
 
 #### Who needs what permission
 
 **Facilitator (deployer)**
 - **Workspace admin**— required to create the Lakebase instance + bind App resources
-- Authenticated CLI profile (`databricks auth login --host <url> --profile lce`)
+- Authenticated CLI profile (`databricks auth login --host <url> --profile prod`)
 - **Fallback if you're not admin:** see [`dab/README.md` § "Lakebase binding fallback"](../dab/README.md#lakebase-binding-fallback) — admin pre-creates the instance, you deploy with `lakebase.yml` commented out
 
 **Reference App's service principal**
@@ -62,17 +62,17 @@
 
 **Attendee group**(e.g. `workshop-attendees`)
 - Databricks SQL entitlement · workspace access · serverless jobs entitlement
-- `SELECT` on `ioc_sandbox.vibe_workshop.*` · `CAN_USE` on the shared warehouse
+- `SELECT` on `<catalog>.vibe_workshop.*` · `CAN_USE` on the shared warehouse
 - `CAN_VIEW` on the reference Genie space · `CAN_USE` on the FMAPI/AI Gateway endpoint
 - `CAN_CREATE` for new Apps in their own scope
 
-The setup notebook handles the UC grants automatically when you deploy with `--var attendee_group=<group>` (default `users`). For the warehouse + Genie + endpoint perms, paste this into a SQL warehouse query (substitute `<attendee_group>`):
+The setup notebook handles the UC grants automatically when you deploy with `--var attendee_group=<group>` (default `users`). For the warehouse + Genie + endpoint perms, paste this into a SQL warehouse query (substitute `<catalog>` and `<attendee_group>`):
 
 ```sql
 -- UC grants (also auto-applied by command_center_setup with --var attendee_group=<group>):
-GRANT USE CATALOG ON CATALOG ioc_sandbox TO `<attendee_group>`;
-GRANT USE SCHEMA ON SCHEMA ioc_sandbox.vibe_workshop TO `<attendee_group>`;
-GRANT SELECT ON SCHEMA ioc_sandbox.vibe_workshop TO `<attendee_group>`;
+GRANT USE CATALOG ON CATALOG <catalog> TO `<attendee_group>`;
+GRANT USE SCHEMA ON SCHEMA <catalog>.vibe_workshop TO `<attendee_group>`;
+GRANT SELECT ON SCHEMA <catalog>.vibe_workshop TO `<attendee_group>`;
 ```
 
 The warehouse `CAN_USE`, Genie `CAN_VIEW`, and endpoint `CAN_USE` grants are set via the workspace UI (or REST) — Databricks doesn't expose SQL DDL for those.
@@ -83,31 +83,31 @@ The warehouse `CAN_USE`, Genie `CAN_VIEW`, and endpoint `CAN_USE` grants are set
 
 #### Other prep
 
-- [ ] LCE branding assets in `branding/lce/` (logo SVG + brand color hex) already shipped
+- [ ] Example branding assets in `branding/example/` (logo SVG + brand color hex) already shipped
 - [ ] Workspace quotas verified — defaults fit; rare exceptions in [`dab/README.md` § Common gotchas](../dab/README.md#common-deploy-gotchas)
 
 ---
 
 ### Deploy the reference build
 
-Full runbook with explanations: [`dab/README.md`](../dab/README.md). After `databricks auth login --profile lce`, from the repo's `dab/` directory:
+Full runbook with explanations: [`dab/README.md`](../dab/README.md). After `databricks auth login --profile prod`, from the repo's `dab/` directory:
 
 ```bash
 # 1. Pre-create catalog/schema + 8 empty UC tables (once per workspace).
 # Required because App resource bindings are validated at deploy time.
-python3 scripts/bootstrap.py --profile lce --warehouse-id <id> --catalog ioc_sandbox
+python3 scripts/bootstrap.py --profile prod --warehouse-id <id> --catalog <catalog>
 
 # 2. Validate (pass --var warehouse_id if the default lookup name doesn't match)
-databricks bundle validate -t lce --var warehouse_id=<id>
+databricks bundle validate -t prod --var warehouse_id=<id>
 
 # 3. Provision Lakebase + job + dashboard + App resource
-databricks bundle deploy -t lce --var warehouse_id=<id>
+databricks bundle deploy -t prod --var warehouse_id=<id>
 
 # 4. Run the setup job (~3-4 min): data → Lakebase DDL → Genie space → config JSON
-databricks bundle run command_center_setup -t lce
+databricks bundle run command_center_setup -t prod
 
 # 5. Start the App
-databricks bundle run command_center_app -t lce
+databricks bundle run command_center_app -t prod
 ```
 
 **Smoke-test the result:**
@@ -120,7 +120,7 @@ databricks bundle run command_center_app -t lce
 
 | Resource | Notes |
 |---|---|
-| 8-table dataset in `ioc_sandbox.vibe_workshop` | 60 days, anchored to workshop date · `company=lce` brand config |
+| 8-table dataset in `<catalog>.vibe_workshop` | 60 days, anchored to workshop date · `company=sample_qsr` brand config |
 | Lakebase instance `command-center-lakebase` | 3 write-back tables · sequence grants applied |
 | Genie space "Command Center reference" | 6 sample Qs · 4 example SQLs · scoped instructions |
 | AI/BI dashboard | 4 widgets: labor % · sales-by-daypart · stock health · sentiment |
@@ -133,7 +133,7 @@ The App reads `/Workspace/Shared/command-center/config.json` (written by the set
 ### T-1 day: attendee comms + final warmup
 
 - [ ] Attendee perms confirmed (everyone can reach the workspace + has the entitlements above)
-- [ ] Send attendees the **Lab Companion Guide**+ workshop env values: workspace URL, catalog, warehouse name, AI Gateway endpoint, FMAPI endpoint, LCE branding folder (`branding/lce/`)
+- [ ] Send attendees the **Lab Companion Guide**+ workshop env values: workspace URL, catalog, warehouse name, AI Gateway endpoint, FMAPI endpoint, example branding folder (`branding/example/`)
 - [ ] Warm the SQL warehouse by running the reference dashboard once
 - [ ] Smoke-test reference Genie with 2-3 questions per pillar
 
@@ -141,10 +141,10 @@ The App reads `/Workspace/Shared/command-center/config.json` (written by the set
 
 ## Synthetic Data Schema (8 tables: 3 dims + 5 facts)
 
-Materialized in `ioc_sandbox.vibe_workshop` (dev mirror at `jdub_demo.vibe_workshop`). 60 days of history anchored to **2026-06-22** so `current_date()` queries on workshop day return real rows. Every chart and AI insight in the reference design has a backing column or table; nothing is computed on-the-fly via AI calls.
+Materialized in `<catalog>.vibe_workshop` (e.g., `jdub_demo.vibe_workshop`). 60 days of history anchored to **2026-06-22** so `current_date()` queries on workshop day return real rows. Every chart and AI insight in the reference design has a backing column or table; nothing is computed on-the-fly via AI calls.
 
 **Dims (3):**
-- `dims_stores` — 20 stores at real LCE-presence locations (Detroit, Chicago, Houston, etc.)
+- `dims_stores` — 20 sample store locations (Detroit, Chicago, Houston, etc.)
 - `dims_items` — 50 SKUs (pizza ingredients, beverages, packaging)
 - `dims_employees` — ~12 per store (cook / cashier / lead / manager mix)
 
@@ -155,7 +155,7 @@ Materialized in `ioc_sandbox.vibe_workshop` (dev mirror at `jdub_demo.vibe_works
 - `facts_purchase_orders` — pre-staged POs with vendor info
 - `facts_customer_feedback` — guest reviews with pre-staged `sentiment_label`, `theme`, and `ai_drafted_reply` columns
 
-Item catalog and store roster are driven by a `company` config in the data generator. Default is `lce` (Little Caesars items + locations); swap to `qsr_mexican` or add a new entry in `COMPANY_CONFIGS` to re-skin for another customer.
+Item catalog and store roster are driven by a `company` config in the data generator. Default is `sample_qsr` (sample QSR items + locations); swap to `qsr_mexican` or add a new entry in `COMPANY_CONFIGS` to re-skin for another customer.
 
 See [`data/README.md`](../data/README.md) for column-level details.
 
@@ -212,9 +212,9 @@ All attendee-created assets include their initials to avoid collisions:
 | Dashboard | `<initials> Operator Insights` |
 | DAB bundle | `<initials>-command-center` |
 | Job name | `<initials>-command-center-refresh` |
-| Sandbox schema (optional) | `ioc_sandbox.<initials>_sandbox` (only if attendees write derived tables) |
+| Sandbox schema (optional) | `<catalog>.<initials>_sandbox` (only if attendees write derived tables) |
 
-The shared workshop schema `ioc_sandbox.vibe_workshop` and the shared `command-center-lakebase` are read+write for all attendees (Lakebase) and read-only (UC tables).
+The shared workshop schema `<catalog>.vibe_workshop` and the shared `command-center-lakebase` are read+write for all attendees (Lakebase) and read-only (UC tables).
 
 ---
 
@@ -235,14 +235,14 @@ tags:
   cost_center: fe-workshop
 ```
 
-For LCE-managed budgets, swap `cost_center: fe-workshop` for whatever code LCE uses. These tags flow into `system.billing.usage` so finance can attribute DBUs to the workshop. The cleanup script (below) uses the `workshop` tag + naming patterns to find what to delete.
+For your organization's managed budgets, swap `cost_center: fe-workshop` for your cost center code. These tags flow into `system.billing.usage` so finance can attribute DBUs to the workshop. The cleanup script (below) uses the `workshop` tag + naming patterns to find what to delete.
 
 ### 2. Budget policy (alert at $100, hard cap at $300)
 
 Set up a workspace-level budget policy before the workshop. Quick version:
 
 ```bash
-databricks --profile lce api post /api/2.1/budget-policies --json '{
+databricks --profile prod api post /api/2.1/budget-policies --json '{
   "policy_name": "ucode-vibe-workshop",
   "custom_tags": [{"key": "workshop", "value": "ucode-vibe-command-center"}],
   "limit_config": {"max_dbu": 300, "alert_thresholds_dbu": [100, 200]}
@@ -260,7 +260,7 @@ Or set this in the Account Console UI under **Settings → Compute → Budget po
 
 ### 4. Apps quota
 
-If LCE has the default 300-apps-per-workspace quota, 10 attendees + facilitator references fits comfortably. Verify by listing existing apps before the workshop: `databricks --profile lce apps list | jq '.apps | length'`.
+If your workspace has the default 300-apps-per-workspace quota, 10 attendees + facilitator references fits comfortably. Verify by listing existing apps before the workshop: `databricks --profile prod apps list | jq '.apps | length'`.
 
 ---
 
@@ -270,14 +270,14 @@ Run the cleanup script 24-48h after the workshop ends. Without this, the Lakebas
 
 ```bash
 # 1. DRY RUN — see what would be deleted
-python3 dab/scripts/cleanup.py --profile lce --catalog ioc_sandbox
+python3 dab/scripts/cleanup.py --profile prod --catalog <catalog>
 
 # 2. APPLY — actually delete everything matching the workshop patterns
-python3 dab/scripts/cleanup.py --profile lce --catalog ioc_sandbox \
+python3 dab/scripts/cleanup.py --profile prod --catalog <catalog> \
     --warehouse-id <id> --apply
 
 # 3. (optional) Drop the bundle-owned facilitator resources too
-databricks bundle destroy -t lce --auto-approve
+databricks bundle destroy -t prod --auto-approve
 ```
 
 The script sweeps and deletes:
